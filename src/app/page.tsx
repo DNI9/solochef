@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { MEAL_DATABASE, GROCERY_LIST } from '@/data/meals';
 import DayPill from '@/components/DayPill';
 import MealCard from '@/components/MealCard';
-import { Calendar, ShoppingCart, Bell } from 'lucide-react';
+import { Calendar, ShoppingCart, Bell, Check } from 'lucide-react';
 
 const DAYS = Object.keys(MEAL_DATABASE);
 
@@ -12,6 +12,15 @@ export default function BentoMealPlanner() {
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
   const [expandedMeal, setExpandedMeal] = useState<string | null>('lunch');
   const [activeTab, setActiveTab] = useState<'plan' | 'groceries'>('plan');
+  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
+
+  const toggleGroceryItem = (category: string, itemIndex: number) => {
+    const key = `${category}-${itemIndex}`;
+    setCheckedItems(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
+  };
 
   useEffect(() => {
     const today = new Date().getDay(); 
@@ -103,12 +112,21 @@ export default function BentoMealPlanner() {
                 <div key={idx} className="bg-white p-5 rounded-2xl shadow-sm border border-zinc-100">
                   <h3 className="font-bold text-lg mb-3 border-b border-zinc-100 pb-2 text-zinc-800">{list.category}</h3>
                   <ul className="space-y-3">
-                    {list.items.map((item, i) => (
-                      <li key={i} className="flex items-start gap-3 text-sm font-medium text-zinc-600">
-                        <div className="w-5 h-5 rounded border-2 border-zinc-300 mt-0.5 flex-shrink-0"></div>
-                        <span>{item}</span>
-                      </li>
-                    ))}
+                    {list.items.map((item, i) => {
+                      const isChecked = checkedItems[`${list.category}-${i}`];
+                      return (
+                        <li 
+                          key={i} 
+                          className="flex items-start gap-3 text-sm font-medium text-zinc-600 cursor-pointer select-none"
+                          onClick={() => toggleGroceryItem(list.category, i)}
+                        >
+                          <div className={`w-5 h-5 rounded flex items-center justify-center border-2 mt-0.5 flex-shrink-0 transition-colors ${isChecked ? 'bg-orange-500 border-orange-500 text-white' : 'border-zinc-300'}`}>
+                            {isChecked && <Check size={14} strokeWidth={3} />}
+                          </div>
+                          <span className={isChecked ? 'line-through text-zinc-400' : ''}>{item}</span>
+                        </li>
+                      );
+                    })}
                   </ul>
                 </div>
               ))}

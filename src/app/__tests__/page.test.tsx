@@ -19,4 +19,27 @@ describe('Page', () => {
     fireEvent.click(screen.getByText('Groceries'));
     expect(screen.getByText('🛒 Weekly Haul')).toBeTruthy();
   });
+
+  it('toggles grocery items', () => {
+    render(<Page />);
+    
+    // Click groceries tab
+    fireEvent.click(screen.getByText('Groceries'));
+    
+    const eggsItem = screen.getByText('1 Dozen Eggs');
+    expect(eggsItem).toBeTruthy();
+    
+    // Check initial state (no line-through)
+    expect(eggsItem.className).not.toContain('line-through');
+    
+    // Click to toggle
+    fireEvent.click(eggsItem);
+    
+    // Check if toggled state (line-through added)
+    expect(eggsItem.className).toContain('line-through');
+    
+    // Click again to untoggle
+    fireEvent.click(eggsItem);
+    expect(eggsItem.className).not.toContain('line-through');
+  });
 });
