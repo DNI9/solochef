@@ -38,4 +38,39 @@ describe('MealCard', () => {
     fireEvent.click(screen.getByText('Breakfast'));
     expect(handleClick).toHaveBeenCalledTimes(1);
   });
+
+  it('renders YouTube recipe search button when card is open with valid query URL', () => {
+    render(<MealCard mealName="Breakfast" data={mockData} isOpen={true} onClick={() => {}} />);
+    
+    const ytButton = screen.getByRole('link', { name: /youtube/i });
+    expect(ytButton).toBeTruthy();
+    expect(ytButton.getAttribute('href')).toBe(
+      'https://www.youtube.com/results?search_query=3-Egg%20Veggie%20Bhurji%20recipe'
+    );
+    expect(ytButton.getAttribute('target')).toBe('_blank');
+    expect(ytButton.getAttribute('rel')).toContain('noopener');
+  });
+
+  it('does not render YouTube button when card is closed', () => {
+    render(<MealCard mealName="Breakfast" data={mockData} isOpen={false} onClick={() => {}} />);
+    expect(screen.queryByRole('link', { name: /youtube/i })).toBeNull();
+  });
+
+  it('stops propagation when clicking YouTube link so parent card does not trigger onClick', () => {
+    const handleCardClick = vi.fn();
+    render(<MealCard mealName="Breakfast" data={mockData} isOpen={true} onClick={handleCardClick} />);
+    
+    const ytButton = screen.getByRole('link', { name: /youtube/i });
+    fireEvent.click(ytButton);
+    expect(handleCardClick).not.toHaveBeenCalled();
+  });
+
+  it('stops keydown propagation when pressing Enter on YouTube link so parent card does not trigger onClick', () => {
+    const handleCardClick = vi.fn();
+    render(<MealCard mealName="Breakfast" data={mockData} isOpen={true} onClick={handleCardClick} />);
+    
+    const ytButton = screen.getByRole('link', { name: /youtube/i });
+    fireEvent.keyDown(ytButton, { key: 'Enter', code: 'Enter' });
+    expect(handleCardClick).not.toHaveBeenCalled();
+  });
 });

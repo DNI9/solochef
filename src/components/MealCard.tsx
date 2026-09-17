@@ -74,9 +74,31 @@ export default function MealCard({ mealName, data, isOpen, onClick }: MealCardPr
                    <span className="text-[10px] font-bold uppercase bg-amber-500/20 text-amber-900 px-2 py-1 rounded-md animate-pulse">Anti-Slump Hack 🛡️</span>
                  )}
               </div>
-              <p className={`${data.text} text-sm leading-relaxed font-medium opacity-90`}>
+              <p className={`${data.text} text-sm leading-relaxed font-medium opacity-90 mb-3.5 select-text`}>
                 {data.recipe}
               </p>
+
+              <a
+                href={`https://www.youtube.com/results?search_query=${encodeURIComponent(`${data.title} recipe`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+                aria-label={`Search ${data.title} recipe on YouTube`}
+                className="min-h-[44px] w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 active:scale-[0.98] text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-xs transition-all cursor-pointer select-none"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  width="18"
+                  height="18"
+                  fill="currentColor"
+                  className="shrink-0"
+                  aria-hidden="true"
+                >
+                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                </svg>
+                <span>Search Recipe on YouTube</span>
+              </a>
             </div>
           </motion.div>
         )}
