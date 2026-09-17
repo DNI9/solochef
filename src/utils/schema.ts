@@ -16,10 +16,16 @@ export const SCHEMA_TEMPLATE = `{
   "Thursday": { /* same structure as Monday */ },
   "Friday": { /* same structure as Monday */ },
   "Saturday": { /* same structure as Monday */ },
-  "Sunday": { /* same structure as Monday */ }
+  "Sunday": { /* same structure as Monday */ },
+  "groceries": [
+    {
+      "category": "String",
+      "items": ["String"]
+    }
+  ]
 }`;
 
-export function validateMealPlan(jsonString: string): Record<string, DayPlan> {
+export function validateMealPlan(jsonString: string): any {
   try {
     const data = JSON.parse(jsonString);
     if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error("Root must be a JSON object");
@@ -49,7 +55,23 @@ export function validateMealPlan(jsonString: string): Record<string, DayPlan> {
         if (typeof m.recipe !== 'string') throw new Error(`Invalid recipe for ${day} ${m.name}`);
       }
     }
-    return data as Record<string, DayPlan>;
+    
+    // Validate groceries if present
+    if (data.groceries) {
+      if (!Array.isArray(data.groceries)) {
+        throw new Error("groceries must be an array");
+      }
+      for (let i = 0; i < data.groceries.length; i++) {
+        const g = data.groceries[i];
+        if (typeof g.category !== 'string') throw new Error(`Invalid category for grocery list at index ${i}`);
+        if (!Array.isArray(g.items)) throw new Error(`Invalid items array for grocery list at index ${i}`);
+        for (let j = 0; j < g.items.length; j++) {
+          if (typeof g.items[j] !== 'string') throw new Error(`Invalid item for grocery list at index ${i}, item ${j}`);
+        }
+      }
+    }
+    
+    return data as any;
   } catch (error: unknown) {
     throw new Error(error instanceof Error ? error.message : "Invalid JSON format");
   }

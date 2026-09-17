@@ -26,4 +26,30 @@ describe('Page', () => {
     expect(screen.getByText('🔄 Import Plan')).toBeTruthy();
     expect(screen.getByText('Copy LLM Schema')).toBeTruthy();
   });
+
+  it('renders imported groceries', () => {
+    // Mock localStorage
+    const mockPlan = {
+      Monday: { prepAlert: null, meals: [] },
+      Tuesday: { prepAlert: null, meals: [] },
+      Wednesday: { prepAlert: null, meals: [] },
+      Thursday: { prepAlert: null, meals: [] },
+      Friday: { prepAlert: null, meals: [] },
+      Saturday: { prepAlert: null, meals: [] },
+      Sunday: { prepAlert: null, meals: [] },
+      groceries: [
+        { category: 'Fresh Produce', items: ['Apples', 'Bananas'] }
+      ]
+    };
+    Storage.prototype.getItem = () => JSON.stringify(mockPlan);
+
+    render(<Page />);
+    fireEvent.click(screen.getByText('Groceries'));
+    expect(screen.getByText('Fresh Produce')).toBeTruthy();
+    expect(screen.getByText('Apples')).toBeTruthy();
+    expect(screen.getByText('Bananas')).toBeTruthy();
+
+    // Restore mock
+    Storage.prototype.getItem = () => null;
+  });
 });

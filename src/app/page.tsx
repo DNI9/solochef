@@ -15,7 +15,7 @@ export default function BentoMealPlanner() {
   const [expandedMeal, setExpandedMeal] = useState<string | null>('lunch');
   const [activeTab, setActiveTab] = useState<'plan' | 'groceries' | 'import'>('plan');
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
-  const [mealDb, setMealDb] = useState<Record<string, DayPlan>>(MEAL_DATABASE);
+  const [mealDb, setMealDb] = useState<any>(MEAL_DATABASE);
 
   useEffect(() => {
     const today = new Date().getDay(); 
@@ -45,13 +45,14 @@ export default function BentoMealPlanner() {
 
   const currentDayName = DAYS[currentDayIndex];
   const dayData = mealDb[currentDayName] || MEAL_DATABASE[currentDayName];
-  const hasPlan = Object.keys(mealDb).length > 0;
+  // Check if we have at least one day defined in the plan to consider it loaded
+  const hasPlan = DAYS.some(day => mealDb[day]);
 
   const handleMealClick = (meal: string) => {
     setExpandedMeal(expandedMeal === meal ? null : meal);
   };
   
-  const handleImportPlan = (newPlan: Record<string, DayPlan>) => {
+  const handleImportPlan = (newPlan: any) => {
     setMealDb(newPlan);
     try {
       localStorage.setItem('solochef_meal_plan', JSON.stringify(newPlan));
@@ -143,7 +144,7 @@ export default function BentoMealPlanner() {
         {activeTab === 'groceries' && (
           <main className="flex-1 overflow-y-auto px-6 py-6 bg-yellow-50/30">
             <h2 className="text-xl font-bold mb-6 flex items-center gap-2">🛒 Weekly Haul</h2>
-            {GROCERY_LIST.length === 0 ? (
+            {(!mealDb.groceries || mealDb.groceries.length === 0) && GROCERY_LIST.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <div className="w-20 h-20 bg-white rounded-full shadow-sm flex items-center justify-center mb-6">
                   <ShoppingCart size={32} className="text-zinc-400" />
@@ -155,11 +156,11 @@ export default function BentoMealPlanner() {
               </div>
             ) : (
               <div className="space-y-6">
-                {GROCERY_LIST.map((list, idx) => (
+                {(mealDb.groceries || GROCERY_LIST).map((list: any, idx: number) => (
                   <div key={idx} className="bg-white p-5 rounded-2xl shadow-sm border border-zinc-100">
                     <h3 className="font-bold text-lg mb-3 border-b border-zinc-100 pb-2 text-zinc-800">{list.category}</h3>
                     <ul className="space-y-3">
-                      {list.items.map((item, i) => {
+                      {list.items.map((item: string, i: number) => {
                         const isChecked = checkedItems[`${list.category}-${i}`];
                         return (
                           <li key={i}>
