@@ -1,21 +1,21 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { MEAL_DATABASE, GROCERY_LIST, DayPlan } from '@/data/meals';
+import { MEAL_DATABASE, GROCERY_LIST, MealPlanData, GroceryCategory } from '@/data/meals';
 import DayPill from '@/components/DayPill';
 import MealCard from '@/components/MealCard';
 import ImportTab from '@/components/ImportTab';
 import { Calendar, ShoppingCart, Bell, Check, FileJson } from 'lucide-react';
 import { validateMealPlan } from '@/utils/schema';
 
-const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as const;
 
 export default function BentoMealPlanner() {
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
   const [expandedMeal, setExpandedMeal] = useState<string | null>('lunch');
   const [activeTab, setActiveTab] = useState<'plan' | 'groceries' | 'import'>('plan');
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
-  const [mealDb, setMealDb] = useState<any>(MEAL_DATABASE);
+  const [mealDb, setMealDb] = useState<MealPlanData>(MEAL_DATABASE);
 
   useEffect(() => {
     const today = new Date().getDay(); 
@@ -52,7 +52,7 @@ export default function BentoMealPlanner() {
     setExpandedMeal(expandedMeal === meal ? null : meal);
   };
   
-  const handleImportPlan = (newPlan: any) => {
+  const handleImportPlan = (newPlan: MealPlanData) => {
     setMealDb(newPlan);
     try {
       localStorage.setItem('solochef_meal_plan', JSON.stringify(newPlan));
@@ -156,7 +156,7 @@ export default function BentoMealPlanner() {
               </div>
             ) : (
               <div className="space-y-6">
-                {(mealDb.groceries || GROCERY_LIST).map((list: any, idx: number) => (
+                {(mealDb.groceries || GROCERY_LIST).map((list: GroceryCategory, idx: number) => (
                   <div key={idx} className="bg-white p-5 rounded-2xl shadow-sm border border-zinc-100">
                     <h3 className="font-bold text-lg mb-3 border-b border-zinc-100 pb-2 text-zinc-800">{list.category}</h3>
                     <ul className="space-y-3">

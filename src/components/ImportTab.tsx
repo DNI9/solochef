@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Copy, CheckCircle2, AlertCircle } from 'lucide-react';
 import { SCHEMA_TEMPLATE, validateMealPlan } from '@/utils/schema';
-import { DayPlan } from '@/data/meals';
+import { MealPlanData } from '@/data/meals';
 
 interface ImportTabProps {
-  onImport: (newPlan: Record<string, DayPlan>) => void;
+  onImport: (newPlan: MealPlanData) => void;
 }
 
 export default function ImportTab({ onImport }: ImportTabProps) {
