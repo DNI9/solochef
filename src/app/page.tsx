@@ -1,18 +1,39 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { MEAL_DATABASE, GROCERY_LIST } from '@/data/meals';
+import { MEAL_DATABASE, GROCERY_LIST, DayPlan } from '@/data/meals';
 import DayPill from '@/components/DayPill';
 import MealCard from '@/components/MealCard';
-import { Calendar, ShoppingCart, Bell, Check } from 'lucide-react';
+import ImportTab from '@/components/ImportTab';
+import { Calendar, ShoppingCart, Bell, Check, FileJson } from 'lucide-react';
+import { validateMealPlan } from '@/utils/schema';
 
 const DAYS = Object.keys(MEAL_DATABASE);
 
 export default function BentoMealPlanner() {
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
   const [expandedMeal, setExpandedMeal] = useState<string | null>('lunch');
-  const [activeTab, setActiveTab] = useState<'plan' | 'groceries'>('plan');
+  const [activeTab, setActiveTab] = useState<'plan' | 'groceries' | 'import'>('plan');
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
+  const [mealDb, setMealDb] = useState<Record<string, DayPlan>>(MEAL_DATABASE);
+
+  useEffect(() => {
+    const today = new Date().getDay(); 
+    const mappedIndex = today === 0 ? 6 : today - 1;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCurrentDayIndex(mappedIndex);
+    
+    // Load custom plan from localStorage if available
+    const savedPlan = localStorage.getItem('solochef_meal_plan');
+    if (savedPlan) {
+      try {
+        const parsed = validateMealPlan(savedPlan);
+        setMealDb(parsed);
+      } catch (e: unknown) {
+        console.error("Failed to load saved plan", e instanceof Error ? e.message : e);
+      }
+    }
+  }, []);
 
   const toggleGroceryItem = (category: string, itemIndex: number) => {
     const key = `${category}-${itemIndex}`;
@@ -22,18 +43,16 @@ export default function BentoMealPlanner() {
     }));
   };
 
-  useEffect(() => {
-    const today = new Date().getDay(); 
-    const mappedIndex = today === 0 ? 6 : today - 1;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setCurrentDayIndex(mappedIndex);
-  }, []);
-
   const currentDayName = DAYS[currentDayIndex];
-  const dayData = MEAL_DATABASE[currentDayName];
+  const dayData = mealDb[currentDayName] || MEAL_DATABASE[currentDayName];
 
   const handleMealClick = (meal: string) => {
     setExpandedMeal(expandedMeal === meal ? null : meal);
+  };
+  
+  const handleImportPlan = (newPlan: Record<string, DayPlan>) => {
+    setMealDb(newPlan);
+    localStorage.setItem('solochef_meal_plan', JSON.stringify(newPlan));
   };
 
   return (
@@ -48,7 +67,7 @@ export default function BentoMealPlanner() {
           <p className="text-sm text-zinc-500 font-medium">Zero-crash meals for one.</p>
         </header>
 
-        {activeTab === 'plan' ? (
+        {activeTab === 'plan' && (
           <>
             <div className="w-full overflow-x-auto no-scrollbar py-4 px-6 border-b border-zinc-100 bg-zinc-50/50">
               <div className="flex gap-3 w-max">
@@ -75,36 +94,28 @@ export default function BentoMealPlanner() {
               )}
 
               <div className="flex flex-col items-center">
-                <MealCard 
-                  mealName="Breakfast" 
-                  data={dayData.breakfast} 
-                  isOpen={expandedMeal === 'breakfast'} 
-                  onClick={() => handleMealClick('breakfast')} 
-                />
-                
-                <div className="w-1 h-3 bg-zinc-400 rounded-full my-1.5 opacity-40"></div>
-
-                <MealCard 
-                  mealName="Lunch" 
-                  data={dayData.lunch} 
-                  isOpen={expandedMeal === 'lunch'} 
-                  onClick={() => handleMealClick('lunch')} 
-                />
-
-                <div className="w-1 h-3 bg-zinc-400 rounded-full my-1.5 opacity-40"></div>
-
-                <MealCard 
-                  mealName="Dinner" 
-                  data={dayData.dinner} 
-                  isOpen={expandedMeal === 'dinner'} 
-                  onClick={() => handleMealClick('dinner')} 
-                />
+                {dayData.meals && dayData.meals.map((meal, index) => (
+                  <React.Fragment key={`${meal.name}-${index}`}>
+                    <MealCard 
+                      mealName={meal.name} 
+                      data={meal} 
+                      isOpen={expandedMeal === meal.name.toLowerCase()} 
+                      onClick={() => handleMealClick(meal.name.toLowerCase())} 
+                    />
+                    
+                    {index < dayData.meals.length - 1 && (
+                      <div className="w-1 h-3 bg-zinc-400 rounded-full my-1.5 opacity-40"></div>
+                    )}
+                  </React.Fragment>
+                ))}
               </div>
 
               <div className="h-10"></div>
             </main>
           </>
-        ) : (
+        )}
+        
+        {activeTab === 'groceries' && (
           <main className="flex-1 overflow-y-auto px-6 py-6 bg-yellow-50/30">
             <h2 className="text-xl font-bold mb-6 flex items-center gap-2">🛒 Weekly Haul</h2>
             <div className="space-y-6">
@@ -115,15 +126,17 @@ export default function BentoMealPlanner() {
                     {list.items.map((item, i) => {
                       const isChecked = checkedItems[`${list.category}-${i}`];
                       return (
-                        <li 
-                          key={i} 
-                          className="flex items-start gap-3 text-sm font-medium text-zinc-600 cursor-pointer select-none"
-                          onClick={() => toggleGroceryItem(list.category, i)}
-                        >
-                          <div className={`w-5 h-5 rounded flex items-center justify-center border-2 mt-0.5 flex-shrink-0 transition-colors ${isChecked ? 'bg-orange-500 border-orange-500 text-white' : 'border-zinc-300'}`}>
-                            {isChecked && <Check size={14} strokeWidth={3} />}
-                          </div>
-                          <span className={isChecked ? 'line-through text-zinc-400' : ''}>{item}</span>
+                        <li key={i}>
+                          <button
+                            type="button"
+                            className="flex items-start gap-3 text-sm font-medium text-zinc-600 cursor-pointer select-none text-left w-full focus:outline-none focus:ring-2 focus:ring-orange-500 rounded-md p-1"
+                            onClick={() => toggleGroceryItem(list.category, i)}
+                          >
+                            <div className={`w-5 h-5 rounded flex items-center justify-center border-2 mt-0.5 flex-shrink-0 transition-colors ${isChecked ? 'bg-orange-500 border-orange-500 text-white' : 'border-zinc-300'}`}>
+                              {isChecked && <Check size={14} strokeWidth={3} />}
+                            </div>
+                            <span className={isChecked ? 'line-through text-zinc-400' : ''}>{item}</span>
+                          </button>
                         </li>
                       );
                     })}
@@ -132,6 +145,10 @@ export default function BentoMealPlanner() {
               ))}
             </div>
           </main>
+        )}
+        
+        {activeTab === 'import' && (
+          <ImportTab onImport={handleImportPlan} />
         )}
 
         {/* Bottom Navigation */}
@@ -150,6 +167,14 @@ export default function BentoMealPlanner() {
           >
             <ShoppingCart size={24} />
             <span className="text-[10px] font-bold uppercase tracking-widest">Groceries</span>
+          </button>
+          
+          <button 
+            onClick={() => setActiveTab('import')}
+            className={`flex flex-col items-center gap-1 transition-colors ${activeTab === 'import' ? 'text-zinc-900' : 'text-zinc-400'}`}
+          >
+            <FileJson size={24} />
+            <span className="text-[10px] font-bold uppercase tracking-widest">Import</span>
           </button>
         </nav>
 

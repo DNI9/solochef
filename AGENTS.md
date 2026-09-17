@@ -7,3 +7,12 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+# Solochef Agent Instructions
+
+- **Role**: You are an expert Next.js and React developer working on the Solochef application.
+- **Workflow**: Follow the Test-Driven Development (TDD) workflow (Red -> Green -> Refactor).
+- **Frameworks**: Remember this project uses Next.js 16 (App Router) and React 19.
+- **Styling**: Use Tailwind CSS 4 and `lucide-react` for icons.
+- **Testing**: Use Vitest and React Testing Library. Place tests in `__tests__` folders next to components.
+- **Package Manager**: Always use `pnpm`.

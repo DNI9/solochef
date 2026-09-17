@@ -42,4 +42,11 @@ describe('Page', () => {
     fireEvent.click(eggsItem);
     expect(eggsItem.className).not.toContain('line-through');
   });
+
+  it('switches to import tab and shows copy button', () => {
+    render(<Page />);
+    fireEvent.click(screen.getByText('Import'));
+    expect(screen.getByText('🔄 Import Plan')).toBeTruthy();
+    expect(screen.getByText('Copy LLM Schema')).toBeTruthy();
+  });
 });
