@@ -10,6 +10,12 @@ export default defineConfig({
     setupFiles: './vitest.setup.ts',
     alias: {
       '@': path.resolve(__dirname, './src')
+    },
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        singleFork: true
+      }
     }
   }
 })

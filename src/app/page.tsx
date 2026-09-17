@@ -8,7 +8,7 @@ import ImportTab from '@/components/ImportTab';
 import { Calendar, ShoppingCart, Bell, Check, FileJson } from 'lucide-react';
 import { validateMealPlan } from '@/utils/schema';
 
-const DAYS = Object.keys(MEAL_DATABASE);
+const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 export default function BentoMealPlanner() {
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
@@ -45,6 +45,7 @@ export default function BentoMealPlanner() {
 
   const currentDayName = DAYS[currentDayIndex];
   const dayData = mealDb[currentDayName] || MEAL_DATABASE[currentDayName];
+  const hasPlan = Object.keys(mealDb).length > 0;
 
   const handleMealClick = (meal: string) => {
     setExpandedMeal(expandedMeal === meal ? null : meal);
@@ -52,7 +53,11 @@ export default function BentoMealPlanner() {
   
   const handleImportPlan = (newPlan: Record<string, DayPlan>) => {
     setMealDb(newPlan);
-    localStorage.setItem('solochef_meal_plan', JSON.stringify(newPlan));
+    try {
+      localStorage.setItem('solochef_meal_plan', JSON.stringify(newPlan));
+    } catch (e) {
+      console.error("Failed to save plan to localStorage", e);
+    }
   };
 
   return (
@@ -69,81 +74,113 @@ export default function BentoMealPlanner() {
 
         {activeTab === 'plan' && (
           <>
-            <div className="w-full overflow-x-auto no-scrollbar py-4 px-6 border-b border-zinc-100 bg-zinc-50/50">
-              <div className="flex gap-3 w-max">
-                {DAYS.map((day, idx) => (
-                  <DayPill 
-                    key={day} 
-                    day={day} 
-                    active={idx === currentDayIndex} 
-                    onClick={() => { setCurrentDayIndex(idx); setExpandedMeal('lunch'); }} 
-                  />
-                ))}
-              </div>
-            </div>
-
-            <main className="flex-1 overflow-y-auto px-6 py-6 pb-12 hide-scrollbar">
-              {dayData.prepAlert && (
-                <div className="mb-6 bg-amber-100 border border-amber-300 text-amber-900 px-4 py-3 rounded-2xl flex items-start gap-3 shadow-sm">
-                  <Bell className="text-amber-600 mt-0.5" size={20} />
-                  <div>
-                    <h4 className="text-sm font-bold uppercase tracking-wide">Batch Prep Alert</h4>
-                    <p className="text-sm font-medium opacity-80">{dayData.prepAlert}</p>
+            {hasPlan ? (
+              <>
+                <div className="w-full overflow-x-auto no-scrollbar py-4 px-6 border-b border-zinc-100 bg-zinc-50/50">
+                  <div className="flex gap-3 w-max">
+                    {DAYS.map((day, idx) => (
+                      <DayPill 
+                        key={day} 
+                        day={day} 
+                        active={idx === currentDayIndex} 
+                        onClick={() => { setCurrentDayIndex(idx); setExpandedMeal('lunch'); }} 
+                      />
+                    ))}
                   </div>
                 </div>
-              )}
 
-              <div className="flex flex-col items-center">
-                {dayData.meals && dayData.meals.map((meal, index) => (
-                  <React.Fragment key={`${meal.name}-${index}`}>
-                    <MealCard 
-                      mealName={meal.name} 
-                      data={meal} 
-                      isOpen={expandedMeal === meal.name.toLowerCase()} 
-                      onClick={() => handleMealClick(meal.name.toLowerCase())} 
-                    />
-                    
-                    {index < dayData.meals.length - 1 && (
-                      <div className="w-1 h-3 bg-zinc-400 rounded-full my-1.5 opacity-40"></div>
-                    )}
-                  </React.Fragment>
-                ))}
-              </div>
+                <main className="flex-1 overflow-y-auto px-6 py-6 pb-12 hide-scrollbar">
+                  {dayData?.prepAlert && (
+                    <div className="mb-6 bg-amber-100 border border-amber-300 text-amber-900 px-4 py-3 rounded-2xl flex items-start gap-3 shadow-sm">
+                      <Bell className="text-amber-600 mt-0.5" size={20} />
+                      <div>
+                        <h4 className="text-sm font-bold uppercase tracking-wide">Batch Prep Alert</h4>
+                        <p className="text-sm font-medium opacity-80">{dayData.prepAlert}</p>
+                      </div>
+                    </div>
+                  )}
 
-              <div className="h-10"></div>
-            </main>
+                  <div className="flex flex-col items-center">
+                    {dayData?.meals && dayData.meals.map((meal, index) => (
+                      <React.Fragment key={`${meal.name}-${index}`}>
+                        <MealCard 
+                          mealName={meal.name} 
+                          data={meal} 
+                          isOpen={expandedMeal === meal.name.toLowerCase()} 
+                          onClick={() => handleMealClick(meal.name.toLowerCase())} 
+                        />
+                        
+                        {index < dayData.meals.length - 1 && (
+                          <div className="w-1 h-3 bg-zinc-400 rounded-full my-1.5 opacity-40"></div>
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </div>
+
+                  <div className="h-10"></div>
+                </main>
+              </>
+            ) : (
+              <main className="flex-1 flex flex-col items-center justify-center px-6 py-12 text-center">
+                <div className="w-20 h-20 bg-zinc-100 rounded-full flex items-center justify-center mb-6">
+                  <Calendar size={32} className="text-zinc-400" />
+                </div>
+                <h2 className="text-xl font-bold text-zinc-800 mb-2">No meal plan found</h2>
+                <p className="text-zinc-500 mb-8 max-w-[250px]">
+                  You haven&apos;t loaded a meal plan yet. Head over to the Import tab to load your JSON plan.
+                </p>
+                <button 
+                  onClick={() => setActiveTab('import')}
+                  className="bg-zinc-900 text-white px-6 py-3 rounded-xl font-bold text-sm shadow-md hover:bg-zinc-800 transition-colors"
+                >
+                  Go to Import Tab
+                </button>
+              </main>
+            )}
           </>
         )}
         
         {activeTab === 'groceries' && (
           <main className="flex-1 overflow-y-auto px-6 py-6 bg-yellow-50/30">
             <h2 className="text-xl font-bold mb-6 flex items-center gap-2">🛒 Weekly Haul</h2>
-            <div className="space-y-6">
-              {GROCERY_LIST.map((list, idx) => (
-                <div key={idx} className="bg-white p-5 rounded-2xl shadow-sm border border-zinc-100">
-                  <h3 className="font-bold text-lg mb-3 border-b border-zinc-100 pb-2 text-zinc-800">{list.category}</h3>
-                  <ul className="space-y-3">
-                    {list.items.map((item, i) => {
-                      const isChecked = checkedItems[`${list.category}-${i}`];
-                      return (
-                        <li key={i}>
-                          <button
-                            type="button"
-                            className="flex items-start gap-3 text-sm font-medium text-zinc-600 cursor-pointer select-none text-left w-full focus:outline-none focus:ring-2 focus:ring-orange-500 rounded-md p-1"
-                            onClick={() => toggleGroceryItem(list.category, i)}
-                          >
-                            <div className={`w-5 h-5 rounded flex items-center justify-center border-2 mt-0.5 flex-shrink-0 transition-colors ${isChecked ? 'bg-orange-500 border-orange-500 text-white' : 'border-zinc-300'}`}>
-                              {isChecked && <Check size={14} strokeWidth={3} />}
-                            </div>
-                            <span className={isChecked ? 'line-through text-zinc-400' : ''}>{item}</span>
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ul>
+            {GROCERY_LIST.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="w-20 h-20 bg-white rounded-full shadow-sm flex items-center justify-center mb-6">
+                  <ShoppingCart size={32} className="text-zinc-400" />
                 </div>
-              ))}
-            </div>
+                <h2 className="text-xl font-bold text-zinc-800 mb-2">Empty Cart</h2>
+                <p className="text-zinc-500 max-w-[250px]">
+                  Import a meal plan to generate your weekly grocery list.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {GROCERY_LIST.map((list, idx) => (
+                  <div key={idx} className="bg-white p-5 rounded-2xl shadow-sm border border-zinc-100">
+                    <h3 className="font-bold text-lg mb-3 border-b border-zinc-100 pb-2 text-zinc-800">{list.category}</h3>
+                    <ul className="space-y-3">
+                      {list.items.map((item, i) => {
+                        const isChecked = checkedItems[`${list.category}-${i}`];
+                        return (
+                          <li key={i}>
+                            <button
+                              type="button"
+                              className="flex items-start gap-3 text-sm font-medium text-zinc-600 cursor-pointer select-none text-left w-full focus:outline-none focus:ring-2 focus:ring-orange-500 rounded-md p-1"
+                              onClick={() => toggleGroceryItem(list.category, i)}
+                            >
+                              <div className={`w-5 h-5 rounded flex items-center justify-center border-2 mt-0.5 flex-shrink-0 transition-colors ${isChecked ? 'bg-orange-500 border-orange-500 text-white' : 'border-zinc-300'}`}>
+                                {isChecked && <Check size={14} strokeWidth={3} />}
+                              </div>
+                              <span className={isChecked ? 'line-through text-zinc-400' : ''}>{item}</span>
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            )}
           </main>
         )}
         
