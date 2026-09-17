@@ -12,7 +12,7 @@ const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
 
 export default function BentoMealPlanner() {
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
-  const [expandedMeal, setExpandedMeal] = useState<string | null>('lunch');
+  const [expandedMeal, setExpandedMeal] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'plan' | 'groceries' | 'import'>('plan');
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
   const [mealDb, setMealDb] = useState<MealPlanData>(MEAL_DATABASE);
@@ -84,7 +84,7 @@ export default function BentoMealPlanner() {
                         key={day} 
                         day={day} 
                         active={idx === currentDayIndex} 
-                        onClick={() => { setCurrentDayIndex(idx); setExpandedMeal('lunch'); }} 
+                        onClick={() => { setCurrentDayIndex(idx); setExpandedMeal(null); }} 
                       />
                     ))}
                   </div>

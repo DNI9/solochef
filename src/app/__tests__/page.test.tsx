@@ -67,4 +67,47 @@ describe('Page', () => {
     const mainContent = screen.getByRole('main');
     expect(mainContent.className).toMatch(/no-scrollbar|hide-scrollbar/);
   });
+
+  it('keeps meal cards collapsed by default on initial load and day change', () => {
+    const mockPlan = {
+      Monday: {
+        prepAlert: null,
+        meals: [
+          { name: 'Lunch', title: 'Power Salad', type: 'Fiber-First', time: '10m', emoji: '🥗', bg: 'bg-green-100', border: 'border-green-300', text: 'text-green-900', recipe: 'Toss greens with dressing.' }
+        ]
+      },
+      Tuesday: {
+        prepAlert: null,
+        meals: [
+          { name: 'Lunch', title: 'Warm Bowl', type: 'Balanced', time: '15m', emoji: '🍲', bg: 'bg-yellow-100', border: 'border-yellow-300', text: 'text-yellow-900', recipe: 'Heat bowl and serve.' }
+        ]
+      },
+      Wednesday: { prepAlert: null, meals: [] },
+      Thursday: { prepAlert: null, meals: [] },
+      Friday: { prepAlert: null, meals: [] },
+      Saturday: { prepAlert: null, meals: [] },
+      Sunday: { prepAlert: null, meals: [] }
+    };
+    Storage.prototype.getItem = () => JSON.stringify(mockPlan);
+
+    render(<Page />);
+
+    // Click Monday to view Monday's plan
+    fireEvent.click(screen.getByText('MON'));
+
+    // Lunch card title should be visible, but recipe should be collapsed (not in document)
+    expect(screen.getByText('Power Salad')).toBeTruthy();
+    expect(screen.queryByText('Toss greens with dressing.')).toBeNull();
+
+    // Clicking expands it
+    fireEvent.click(screen.getByText('Power Salad'));
+    expect(screen.getByText('Toss greens with dressing.')).toBeTruthy();
+
+    // Switch to Tuesday - Tuesday's lunch card should NOT automatically be expanded
+    fireEvent.click(screen.getByText('TUE'));
+    expect(screen.getByText('Warm Bowl')).toBeTruthy();
+    expect(screen.queryByText('Heat bowl and serve.')).toBeNull();
+
+    Storage.prototype.getItem = () => null;
+  });
 });
