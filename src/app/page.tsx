@@ -28,8 +28,8 @@ export default function BentoMealPlanner() {
   };
 
   return (
-    <div className="bg-zinc-50 min-h-screen text-zinc-900 font-sans selection:bg-orange-200">
-      <div className="max-w-md mx-auto bg-white min-h-screen shadow-xl overflow-hidden flex flex-col relative pb-24">
+    <div className="bg-zinc-50 h-[100dvh] overflow-hidden text-zinc-900 font-sans selection:bg-orange-200">
+      <div className="max-w-md mx-auto bg-white h-full shadow-xl overflow-hidden flex flex-col relative pb-24">
         
         {/* Header */}
         <header className="pt-8 pb-4 px-6 bg-white border-b border-zinc-100">
