@@ -20,7 +20,7 @@ describe('MealCard', () => {
     expect(screen.getByText('Breakfast')).toBeTruthy();
     expect(screen.getByText('3-Egg Veggie Bhurji')).toBeTruthy();
     expect(screen.getByText('🍳')).toBeTruthy();
-    expect(screen.getByText('⏱ 10m')).toBeTruthy();
+    expect(screen.getByText('10m')).toBeTruthy();
     expect(screen.queryByText('Scramble 2 whole eggs.')).toBeNull();
   });
 

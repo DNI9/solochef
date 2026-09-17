@@ -65,7 +65,7 @@ export default function BentoMealPlanner() {
                 </div>
               )}
 
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col items-center">
                 <MealCard 
                   mealName="Breakfast" 
                   data={dayData.breakfast} 
@@ -73,9 +73,7 @@ export default function BentoMealPlanner() {
                   onClick={() => handleMealClick('breakfast')} 
                 />
                 
-                <div className="w-full flex justify-center py-1 opacity-20">
-                  <div className="w-1 h-4 bg-black rounded-full"></div>
-                </div>
+                <div className="w-1 h-3 bg-zinc-400 rounded-full my-1.5 opacity-40"></div>
 
                 <MealCard 
                   mealName="Lunch" 
@@ -84,9 +82,7 @@ export default function BentoMealPlanner() {
                   onClick={() => handleMealClick('lunch')} 
                 />
 
-                <div className="w-full flex justify-center py-1 opacity-20">
-                  <div className="w-1 h-4 bg-black rounded-full"></div>
-                </div>
+                <div className="w-1 h-3 bg-zinc-400 rounded-full my-1.5 opacity-40"></div>
 
                 <MealCard 
                   mealName="Dinner" 
