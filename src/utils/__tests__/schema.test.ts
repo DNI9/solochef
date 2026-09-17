@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect } from 'vitest';
 import { validateMealPlan } from '../schema';
 
@@ -40,7 +41,7 @@ describe('validateMealPlan', () => {
     });
 
     const parsed = validateMealPlan(validJson);
-    expect(parsed.Monday.meals[0].title).toBe('A');
+    expect(parsed.Monday?.meals[0]?.title).toBe('A');
   });
 
   it('should throw on missing meal array', () => {

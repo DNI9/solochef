@@ -52,4 +52,19 @@ describe('Page', () => {
     // Restore mock
     Storage.prototype.getItem = () => null;
   });
+
+  it('applies native mobile styling and scrollbar suppression classes', () => {
+    const { container } = render(<Page />);
+    const mainWrapper = container.firstChild as HTMLElement;
+    expect(mainWrapper.className).toContain('touch-manipulation');
+    expect(mainWrapper.className).toContain('select-none');
+
+    // Bottom navigation buttons have minimum 44px touch targets
+    const planTabBtn = screen.getByRole('button', { name: /plan/i });
+    expect(planTabBtn.className).toMatch(/min-h-\[44px\]|min-w-\[44px\]|h-12|p-2/);
+
+    // Main element uses no-scrollbar/hide-scrollbar
+    const mainContent = screen.getByRole('main');
+    expect(mainContent.className).toMatch(/no-scrollbar|hide-scrollbar/);
+  });
 });
