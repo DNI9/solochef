@@ -1,69 +1,145 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import React, { useState, useEffect } from 'react';
+import { MEAL_DATABASE, GROCERY_LIST } from '@/data/meals';
+import DayPill from '@/components/DayPill';
+import MealCard from '@/components/MealCard';
+import { Calendar, ShoppingCart, Bell } from 'lucide-react';
+
+const DAYS = Object.keys(MEAL_DATABASE);
+
+export default function BentoMealPlanner() {
+  const [currentDayIndex, setCurrentDayIndex] = useState(0);
+  const [expandedMeal, setExpandedMeal] = useState<string | null>('lunch');
+  const [activeTab, setActiveTab] = useState<'plan' | 'groceries'>('plan');
+
+  useEffect(() => {
+    const today = new Date().getDay(); 
+    const mappedIndex = today === 0 ? 6 : today - 1;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCurrentDayIndex(mappedIndex);
+  }, []);
+
+  const currentDayName = DAYS[currentDayIndex];
+  const dayData = MEAL_DATABASE[currentDayName];
+
+  const handleMealClick = (meal: string) => {
+    setExpandedMeal(expandedMeal === meal ? null : meal);
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
+    <div className="bg-zinc-50 min-h-screen text-zinc-900 font-sans selection:bg-orange-200">
+      <div className="max-w-md mx-auto bg-white min-h-screen shadow-xl overflow-hidden flex flex-col relative pb-24">
+        
+        {/* Header */}
+        <header className="pt-8 pb-4 px-6 bg-white border-b border-zinc-100">
+          <h1 className="text-2xl font-extrabold tracking-tight mb-1 flex items-center gap-2">
+            Solo Chef&apos;s Dabba <span className="text-xl">🍱</span>
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+          <p className="text-sm text-zinc-500 font-medium">Zero-crash meals for one.</p>
+        </header>
+
+        {activeTab === 'plan' ? (
+          <>
+            <div className="w-full overflow-x-auto no-scrollbar py-4 px-6 border-b border-zinc-100 bg-zinc-50/50">
+              <div className="flex gap-3 w-max">
+                {DAYS.map((day, idx) => (
+                  <DayPill 
+                    key={day} 
+                    day={day} 
+                    active={idx === currentDayIndex} 
+                    onClick={() => { setCurrentDayIndex(idx); setExpandedMeal('lunch'); }} 
+                  />
+                ))}
+              </div>
+            </div>
+
+            <main className="flex-1 overflow-y-auto px-6 py-6 pb-12 hide-scrollbar">
+              {dayData.prepAlert && (
+                <div className="mb-6 bg-amber-100 border border-amber-300 text-amber-900 px-4 py-3 rounded-2xl flex items-start gap-3 shadow-sm">
+                  <Bell className="text-amber-600 mt-0.5" size={20} />
+                  <div>
+                    <h4 className="text-sm font-bold uppercase tracking-wide">Batch Prep Alert</h4>
+                    <p className="text-sm font-medium opacity-80">{dayData.prepAlert}</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex flex-col gap-4">
+                <MealCard 
+                  mealName="Breakfast" 
+                  data={dayData.breakfast} 
+                  isOpen={expandedMeal === 'breakfast'} 
+                  onClick={() => handleMealClick('breakfast')} 
+                />
+                
+                <div className="w-full flex justify-center py-1 opacity-20">
+                  <div className="w-1 h-4 bg-black rounded-full"></div>
+                </div>
+
+                <MealCard 
+                  mealName="Lunch" 
+                  data={dayData.lunch} 
+                  isOpen={expandedMeal === 'lunch'} 
+                  onClick={() => handleMealClick('lunch')} 
+                />
+
+                <div className="w-full flex justify-center py-1 opacity-20">
+                  <div className="w-1 h-4 bg-black rounded-full"></div>
+                </div>
+
+                <MealCard 
+                  mealName="Dinner" 
+                  data={dayData.dinner} 
+                  isOpen={expandedMeal === 'dinner'} 
+                  onClick={() => handleMealClick('dinner')} 
+                />
+              </div>
+
+              <div className="h-10"></div>
+            </main>
+          </>
+        ) : (
+          <main className="flex-1 overflow-y-auto px-6 py-6 bg-yellow-50/30">
+            <h2 className="text-xl font-bold mb-6 flex items-center gap-2">🛒 Weekly Haul</h2>
+            <div className="space-y-6">
+              {GROCERY_LIST.map((list, idx) => (
+                <div key={idx} className="bg-white p-5 rounded-2xl shadow-sm border border-zinc-100">
+                  <h3 className="font-bold text-lg mb-3 border-b border-zinc-100 pb-2 text-zinc-800">{list.category}</h3>
+                  <ul className="space-y-3">
+                    {list.items.map((item, i) => (
+                      <li key={i} className="flex items-start gap-3 text-sm font-medium text-zinc-600">
+                        <div className="w-5 h-5 rounded border-2 border-zinc-300 mt-0.5 flex-shrink-0"></div>
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </main>
+        )}
+
+        {/* Bottom Navigation */}
+        <nav className="absolute bottom-0 w-full bg-white border-t border-zinc-100 px-6 py-4 flex justify-around items-center pb-8 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)]">
+          <button 
+            onClick={() => setActiveTab('plan')}
+            className={`flex flex-col items-center gap-1 transition-colors ${activeTab === 'plan' ? 'text-zinc-900' : 'text-zinc-400'}`}
           >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            <Calendar size={24} />
+            <span className="text-[10px] font-bold uppercase tracking-widest">Plan</span>
+          </button>
+          
+          <button 
+            onClick={() => setActiveTab('groceries')}
+            className={`flex flex-col items-center gap-1 transition-colors ${activeTab === 'groceries' ? 'text-zinc-900' : 'text-zinc-400'}`}
           >
-            Documentation
-          </a>
-        </div>
-      </main>
+            <ShoppingCart size={24} />
+            <span className="text-[10px] font-bold uppercase tracking-widest">Groceries</span>
+          </button>
+        </nav>
+
+      </div>
     </div>
   );
 }
