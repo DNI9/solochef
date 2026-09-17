@@ -12,13 +12,38 @@ interface MealCardProps {
     bg: string;
     border: string;
     text: string;
-    recipe: string;
+    recipe: string[] | string;
   };
   isOpen: boolean;
   onClick: () => void;
 }
 
+export function normalizeRecipeSteps(recipe: string[] | string): string[] {
+  if (Array.isArray(recipe)) {
+    return recipe.map(s => s.trim()).filter(Boolean);
+  }
+  if (typeof recipe === 'string') {
+    const trimmed = recipe.trim();
+    if (!trimmed) return [];
+    if (trimmed.includes('\n')) {
+      return trimmed
+        .split(/\r?\n+/)
+        .map(s => s.trim())
+        .filter(Boolean);
+    }
+    return [trimmed];
+  }
+  return [];
+}
+
+export function cleanStepText(step: string): string {
+  const cleaned = step.replace(/^(?:step\s*\d+[:\-.]?\s*|\d+[\.\)]\s*)/i, '').trim();
+  return cleaned || step;
+}
+
 export default function MealCard({ mealName, data, isOpen, onClick }: MealCardProps) {
+  const steps = normalizeRecipeSteps(data.recipe);
+
   return (
     <motion.div 
       layout
@@ -68,15 +93,36 @@ export default function MealCard({ mealName, data, isOpen, onClick }: MealCardPr
             className="px-4 overflow-hidden"
           >
             <div className="pt-2 border-t border-black/5 pb-4">
-              <div className="flex gap-2 mb-3 mt-1">
-                 <span className="text-[10px] font-bold uppercase bg-black/5 px-2 py-1 rounded-md">{data.type}</span>
-                 {data.type === 'Fiber-First' && (
-                   <span className="text-[10px] font-bold uppercase bg-amber-500/20 text-amber-900 px-2 py-1 rounded-md animate-pulse">Anti-Slump Hack 🛡️</span>
-                 )}
+              <div className="flex items-center justify-between gap-2 mb-3 mt-1">
+                <div className="flex gap-2">
+                  <span className="text-[10px] font-bold uppercase bg-black/5 px-2 py-1 rounded-md">{data.type}</span>
+                  {data.type === 'Fiber-First' && (
+                    <span className="text-[10px] font-bold uppercase bg-amber-500/20 text-amber-900 px-2 py-1 rounded-md animate-pulse">Anti-Slump Hack 🛡️</span>
+                  )}
+                </div>
+                {steps.length > 0 && (
+                  <span className="text-[10px] font-bold opacity-60 tabular-nums">
+                    {steps.length} {steps.length === 1 ? 'step' : 'steps'}
+                  </span>
+                )}
               </div>
-              <p className={`${data.text} text-sm leading-relaxed font-medium opacity-90 mb-3.5 select-text`}>
-                {data.recipe}
-              </p>
+
+              {steps.length > 0 && (
+                <div className="bg-white/60 backdrop-blur-xs rounded-2xl p-3.5 mb-3.5 border border-white/80 shadow-2xs">
+                  <ol className="space-y-2.5 select-text">
+                    {steps.map((step, idx) => (
+                      <li key={idx} className="flex items-start gap-2.5">
+                        <span className="w-5 h-5 rounded-full bg-white text-zinc-900 border border-black/10 flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5 shadow-2xs">
+                          {idx + 1}
+                        </span>
+                        <span className={`${data.text} text-xs leading-relaxed font-medium flex-1 pt-0.5`}>
+                          {cleanStepText(step)}
+                        </span>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              )}
 
               <a
                 href={`https://www.youtube.com/results?search_query=${encodeURIComponent(`${data.title} recipe`)}`}

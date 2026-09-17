@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, it, expect } from 'vitest';
-import { validateMealPlan } from '../schema';
+import { validateMealPlan, SCHEMA_TEMPLATE, LLM_INSTRUCTION } from '../schema';
 
 describe('validateMealPlan', () => {
   it('should parse valid meal plan', () => {
@@ -44,6 +44,226 @@ describe('validateMealPlan', () => {
     expect(parsed.Monday?.meals[0]?.title).toBe('A');
   });
 
+  it('should parse valid meal plan with recipe as an array of step strings', () => {
+    const validJson = JSON.stringify({
+      Monday: {
+        prepAlert: null,
+        meals: [
+          {
+            name: 'Breakfast',
+            title: 'Veggie Scramble',
+            type: 'High-Protein',
+            time: '10m',
+            emoji: '🍳',
+            bg: 'bg-orange-100',
+            border: 'border-orange-300',
+            text: 'text-orange-900',
+            recipe: [
+              'Chop vegetables finely.',
+              'Heat pan with 1 tsp oil.',
+              'Scramble eggs and serve hot.'
+            ]
+          }
+        ]
+      },
+      Tuesday: { prepAlert: null, meals: [] },
+      Wednesday: { prepAlert: null, meals: [] },
+      Thursday: { prepAlert: null, meals: [] },
+      Friday: { prepAlert: null, meals: [] },
+      Saturday: { prepAlert: null, meals: [] },
+      Sunday: { prepAlert: null, meals: [] }
+    });
+
+    const parsed = validateMealPlan(validJson);
+    expect(parsed.Monday?.meals[0]?.recipe).toEqual([
+      'Chop vegetables finely.',
+      'Heat pan with 1 tsp oil.',
+      'Scramble eggs and serve hot.'
+    ]);
+  });
+
+  it('should normalize single string recipe into an array of steps', () => {
+    const validJson = JSON.stringify({
+      Monday: {
+        prepAlert: null,
+        meals: [
+          {
+            name: 'Breakfast',
+            title: 'Simple Eggs',
+            type: 'High-Protein',
+            time: '5m',
+            emoji: '🍳',
+            bg: 'bg-orange-100',
+            border: 'border-orange-300',
+            text: 'text-orange-900',
+            recipe: 'Scramble 2 whole eggs.'
+          }
+        ]
+      },
+      Tuesday: { prepAlert: null, meals: [] },
+      Wednesday: { prepAlert: null, meals: [] },
+      Thursday: { prepAlert: null, meals: [] },
+      Friday: { prepAlert: null, meals: [] },
+      Saturday: { prepAlert: null, meals: [] },
+      Sunday: { prepAlert: null, meals: [] }
+    });
+
+    const parsed = validateMealPlan(validJson);
+    expect(parsed.Monday?.meals[0]?.recipe).toEqual(['Scramble 2 whole eggs.']);
+  });
+
+  it('should split multiline string recipe into an array of steps', () => {
+    const validJson = JSON.stringify({
+      Monday: {
+        prepAlert: null,
+        meals: [
+          {
+            name: 'Breakfast',
+            title: 'Multi-step Eggs',
+            type: 'High-Protein',
+            time: '10m',
+            emoji: '🍳',
+            bg: 'bg-orange-100',
+            border: 'border-orange-300',
+            text: 'text-orange-900',
+            recipe: '1. Heat pan.\n2. Crack eggs.\n3. Stir gently.'
+          }
+        ]
+      },
+      Tuesday: { prepAlert: null, meals: [] },
+      Wednesday: { prepAlert: null, meals: [] },
+      Thursday: { prepAlert: null, meals: [] },
+      Friday: { prepAlert: null, meals: [] },
+      Saturday: { prepAlert: null, meals: [] },
+      Sunday: { prepAlert: null, meals: [] }
+    });
+
+    const parsed = validateMealPlan(validJson);
+    expect(parsed.Monday?.meals[0]?.recipe).toEqual([
+      '1. Heat pan.',
+      '2. Crack eggs.',
+      '3. Stir gently.'
+    ]);
+  });
+
+  it('should throw when recipe array is empty', () => {
+    const invalidJson = JSON.stringify({
+      Monday: {
+        prepAlert: null,
+        meals: [
+          {
+            name: 'Breakfast',
+            title: 'Eggs',
+            type: 'High-Protein',
+            time: '5m',
+            emoji: '🍳',
+            bg: 'bg-orange-100',
+            border: 'border-orange-300',
+            text: 'text-orange-900',
+            recipe: []
+          }
+        ]
+      },
+      Tuesday: { prepAlert: null, meals: [] },
+      Wednesday: { prepAlert: null, meals: [] },
+      Thursday: { prepAlert: null, meals: [] },
+      Friday: { prepAlert: null, meals: [] },
+      Saturday: { prepAlert: null, meals: [] },
+      Sunday: { prepAlert: null, meals: [] }
+    });
+
+    expect(() => validateMealPlan(invalidJson)).toThrow(/Invalid recipe for Monday Breakfast/i);
+  });
+
+  it('should throw when recipe array contains non-string items', () => {
+    const invalidJson = JSON.stringify({
+      Monday: {
+        prepAlert: null,
+        meals: [
+          {
+            name: 'Breakfast',
+            title: 'Eggs',
+            type: 'High-Protein',
+            time: '5m',
+            emoji: '🍳',
+            bg: 'bg-orange-100',
+            border: 'border-orange-300',
+            text: 'text-orange-900',
+            recipe: [123]
+          }
+        ]
+      },
+      Tuesday: { prepAlert: null, meals: [] },
+      Wednesday: { prepAlert: null, meals: [] },
+      Thursday: { prepAlert: null, meals: [] },
+      Friday: { prepAlert: null, meals: [] },
+      Saturday: { prepAlert: null, meals: [] },
+      Sunday: { prepAlert: null, meals: [] }
+    });
+
+    expect(() => validateMealPlan(invalidJson)).toThrow(/Invalid recipe step at index 0 for Monday Breakfast/i);
+  });
+
+  it('should throw when recipe steps exceed maximum count of 25', () => {
+    const tooManySteps = Array.from({ length: 26 }, (_, idx) => `Step ${idx + 1}`);
+    const invalidJson = JSON.stringify({
+      Monday: {
+        prepAlert: null,
+        meals: [
+          {
+            name: 'Breakfast',
+            title: 'Eggs',
+            type: 'High-Protein',
+            time: '5m',
+            emoji: '🍳',
+            bg: 'bg-orange-100',
+            border: 'border-orange-300',
+            text: 'text-orange-900',
+            recipe: tooManySteps
+          }
+        ]
+      },
+      Tuesday: { prepAlert: null, meals: [] },
+      Wednesday: { prepAlert: null, meals: [] },
+      Thursday: { prepAlert: null, meals: [] },
+      Friday: { prepAlert: null, meals: [] },
+      Saturday: { prepAlert: null, meals: [] },
+      Sunday: { prepAlert: null, meals: [] }
+    });
+
+    expect(() => validateMealPlan(invalidJson)).toThrow(/Too many recipe steps for Monday Breakfast/i);
+  });
+
+  it('should throw when an individual recipe step is excessively long', () => {
+    const hugeStep = 'a'.repeat(2001);
+    const invalidJson = JSON.stringify({
+      Monday: {
+        prepAlert: null,
+        meals: [
+          {
+            name: 'Breakfast',
+            title: 'Eggs',
+            type: 'High-Protein',
+            time: '5m',
+            emoji: '🍳',
+            bg: 'bg-orange-100',
+            border: 'border-orange-300',
+            text: 'text-orange-900',
+            recipe: [hugeStep]
+          }
+        ]
+      },
+      Tuesday: { prepAlert: null, meals: [] },
+      Wednesday: { prepAlert: null, meals: [] },
+      Thursday: { prepAlert: null, meals: [] },
+      Friday: { prepAlert: null, meals: [] },
+      Saturday: { prepAlert: null, meals: [] },
+      Sunday: { prepAlert: null, meals: [] }
+    });
+
+    expect(() => validateMealPlan(invalidJson)).toThrow(/Recipe step at index 0 too long/i);
+  });
+
   it('should throw on missing meal array', () => {
     const invalidJson = JSON.stringify({
       Monday: {}
@@ -55,3 +275,17 @@ describe('validateMealPlan', () => {
     expect(() => validateMealPlan('{ invalid json }')).toThrow(/JSON/i);
   });
 });
+
+describe('SCHEMA_TEMPLATE and LLM_INSTRUCTION', () => {
+  it('SCHEMA_TEMPLATE should show recipe as an array of step instructions', () => {
+    expect(SCHEMA_TEMPLATE).toContain('"recipe": [');
+    expect(SCHEMA_TEMPLATE).toMatch(/Step 1/i);
+  });
+
+  it('LLM_INSTRUCTION should instruct LLMs to generate step-by-step numbered recipe instructions', () => {
+    expect(LLM_INSTRUCTION).toBeTruthy();
+    expect(LLM_INSTRUCTION).toMatch(/step-by-step/i);
+    expect(LLM_INSTRUCTION).toContain(SCHEMA_TEMPLATE);
+  });
+});
+

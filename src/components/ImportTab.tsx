@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Copy, CheckCircle2, AlertCircle } from 'lucide-react';
-import { SCHEMA_TEMPLATE, validateMealPlan } from '@/utils/schema';
+import { Copy, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
+import { SCHEMA_TEMPLATE, LLM_INSTRUCTION, validateMealPlan } from '@/utils/schema';
 import { MealPlanData } from '@/data/meals';
 
 interface ImportTabProps {
@@ -10,7 +10,7 @@ interface ImportTabProps {
 export default function ImportTab({ onImport }: ImportTabProps) {
   const [jsonInput, setJsonInput] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
+  const [copiedType, setCopiedType] = useState<'schema' | 'prompt' | null>(null);
   const [success, setSuccess] = useState(false);
   
   const copyTimeoutRef = useRef<NodeJS.Timeout>(null);
@@ -23,21 +23,21 @@ export default function ImportTab({ onImport }: ImportTabProps) {
     };
   }, []);
 
-  const handleCopySchema = async () => {
+  const copyToClipboard = async (text: string, type: 'schema' | 'prompt') => {
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(SCHEMA_TEMPLATE);
+        await navigator.clipboard.writeText(text);
       } else {
         const textArea = document.createElement("textarea");
-        textArea.value = SCHEMA_TEMPLATE;
+        textArea.value = text;
         document.body.appendChild(textArea);
         textArea.select();
         document.execCommand("copy");
         textArea.remove();
       }
-      setCopied(true);
+      setCopiedType(type);
       if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
-      copyTimeoutRef.current = setTimeout(() => setCopied(false), 2000);
+      copyTimeoutRef.current = setTimeout(() => setCopiedType(null), 2000);
     } catch (err) {
       console.error('Failed to copy text: ', err);
     }
@@ -71,18 +71,37 @@ export default function ImportTab({ onImport }: ImportTabProps) {
       </h2>
       
       <div className="bg-white p-5 rounded-2xl shadow-xs border border-zinc-100 mb-5 select-text">
-        <h3 className="font-bold text-zinc-900 mb-2">1. Get the Schema</h3>
-        <p className="text-sm text-zinc-500 mb-4 leading-relaxed">
-          Copy this schema and ask an LLM (like ChatGPT or Claude) to generate a week&apos;s meal plan in this exact JSON format.
+        <h3 className="font-bold text-zinc-900 mb-2">1. Get Schema &amp; Instructions</h3>
+        <p className="text-sm text-zinc-500 mb-3.5 leading-relaxed">
+          Copy the prompt or schema and ask an LLM (like ChatGPT or Claude) to generate a week&apos;s meal plan in this exact JSON format.
         </p>
-        <button 
-          type="button"
-          onClick={handleCopySchema}
-          className="min-h-[44px] flex items-center gap-2 bg-zinc-100 hover:bg-zinc-200 active:scale-[0.98] text-zinc-800 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all w-full justify-center cursor-pointer select-none"
-        >
-          {copied ? <CheckCircle2 size={16} className="text-green-600" /> : <Copy size={16} />}
-          <span>{copied ? "Schema Copied!" : "Copy LLM Schema"}</span>
-        </button>
+
+        <div className="p-3.5 bg-orange-50/80 border border-orange-200/80 rounded-xl mb-4 text-xs text-orange-950 flex items-start gap-2">
+          <Sparkles size={16} className="text-orange-600 mt-0.5 shrink-0" />
+          <div className="leading-relaxed">
+            <span className="font-bold">Step-by-Step Recipes:</span> Each meal must include a <code className="bg-orange-100/90 text-orange-900 px-1 py-0.5 rounded font-mono text-[11px]">recipe</code> array containing sequential numbered instructions (e.g. <code className="bg-orange-100/90 text-orange-900 px-1 py-0.5 rounded font-mono text-[11px]">[&quot;Step 1: ...&quot;, &quot;Step 2: ...&quot;]</code>).
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-2.5">
+          <button 
+            type="button"
+            onClick={() => copyToClipboard(LLM_INSTRUCTION, 'prompt')}
+            className="min-h-[44px] flex items-center gap-2 bg-orange-500 hover:bg-orange-600 active:scale-[0.98] text-white px-4 py-2.5 rounded-xl text-sm font-bold transition-all flex-1 justify-center cursor-pointer select-none shadow-xs"
+          >
+            {copiedType === 'prompt' ? <CheckCircle2 size={16} className="text-white" /> : <Copy size={16} />}
+            <span>{copiedType === 'prompt' ? "Prompt Copied!" : "Copy LLM Prompt"}</span>
+          </button>
+          
+          <button 
+            type="button"
+            onClick={() => copyToClipboard(SCHEMA_TEMPLATE, 'schema')}
+            className="min-h-[44px] flex items-center gap-2 bg-zinc-100 hover:bg-zinc-200 active:scale-[0.98] text-zinc-800 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all flex-1 justify-center cursor-pointer select-none"
+          >
+            {copiedType === 'schema' ? <CheckCircle2 size={16} className="text-green-600" /> : <Copy size={16} />}
+            <span>{copiedType === 'schema' ? "Schema Copied!" : "Copy LLM Schema"}</span>
+          </button>
+        </div>
       </div>
 
       <div className="bg-white p-5 rounded-2xl shadow-xs border border-zinc-100 select-text">

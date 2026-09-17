@@ -73,4 +73,52 @@ describe('MealCard', () => {
     fireEvent.keyDown(ytButton, { key: 'Enter', code: 'Enter' });
     expect(handleCardClick).not.toHaveBeenCalled();
   });
+
+  it('renders step-by-step numbered recipe instructions when recipe is an array', () => {
+    const arrayData = {
+      ...mockData,
+      recipe: [
+        'Chop bell peppers and onions.',
+        'Sauté on medium flame for 2 mins.',
+        'Add eggs and scramble softly.'
+      ]
+    };
+    render(<MealCard mealName="Breakfast" data={arrayData} isOpen={true} onClick={() => {}} />);
+    expect(screen.getByText('Chop bell peppers and onions.')).toBeTruthy();
+    expect(screen.getByText('Sauté on medium flame for 2 mins.')).toBeTruthy();
+    expect(screen.getByText('Add eggs and scramble softly.')).toBeTruthy();
+    expect(screen.getByText('1')).toBeTruthy();
+    expect(screen.getByText('2')).toBeTruthy();
+    expect(screen.getByText('3')).toBeTruthy();
+    expect(screen.getByText(/3 steps/i)).toBeTruthy();
+  });
+
+  it('strips redundant step prefixes like "Step 1:" or "1." from step text', () => {
+    const prefixedData = {
+      ...mockData,
+      recipe: [
+        'Step 1: Whisk 3 whole eggs.',
+        '2. Heat butter in skillet.'
+      ]
+    };
+    render(<MealCard mealName="Breakfast" data={prefixedData} isOpen={true} onClick={() => {}} />);
+    expect(screen.getByText('Whisk 3 whole eggs.')).toBeTruthy();
+    expect(screen.getByText('Heat butter in skillet.')).toBeTruthy();
+    expect(screen.getByText('1')).toBeTruthy();
+    expect(screen.getByText('2')).toBeTruthy();
+  });
+
+  it('handles multiline string recipe as numbered steps', () => {
+    const multilineData = {
+      ...mockData,
+      recipe: 'Heat pan.\nAdd eggs.\nServe warm.'
+    };
+    render(<MealCard mealName="Breakfast" data={multilineData} isOpen={true} onClick={() => {}} />);
+    expect(screen.getByText('Heat pan.')).toBeTruthy();
+    expect(screen.getByText('Add eggs.')).toBeTruthy();
+    expect(screen.getByText('Serve warm.')).toBeTruthy();
+    expect(screen.getByText('1')).toBeTruthy();
+    expect(screen.getByText('2')).toBeTruthy();
+    expect(screen.getByText('3')).toBeTruthy();
+  });
 });
