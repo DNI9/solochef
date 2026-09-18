@@ -11,6 +11,7 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src')
     },
-    pool: 'forks'
+    pool: 'forks',
+    fileParallelism: false
   }
 })

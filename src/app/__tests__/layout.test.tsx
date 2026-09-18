@@ -13,13 +13,24 @@ describe('RootLayout Configuration', () => {
     expect(viewport.themeColor).toBeDefined();
   });
 
-  it('exports metadata with standalone appleWebApp capabilities', () => {
+  it('exports metadata with standalone appleWebApp capabilities and PWA manifest', () => {
     expect(metadata).toBeDefined();
     expect(metadata.title).toBe("Solo Chef's Dabba");
+    expect(metadata.manifest).toBe('/manifest.webmanifest');
     expect(metadata.appleWebApp).toEqual({
       capable: true,
       statusBarStyle: 'default',
       title: "Solo Chef",
     });
+  });
+
+  it('exports proper icons configuration for PWA and iOS', () => {
+    expect(metadata.icons).toBeDefined();
+    expect(metadata.icons).toEqual(
+      expect.objectContaining({
+        apple: expect.anything(),
+        icon: expect.anything(),
+      })
+    );
   });
 });

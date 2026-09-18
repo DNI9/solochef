@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ea580c" />
+      <stop offset="50%" stop-color="#f97316" />
+      <stop offset="100%" stop-color="#fb923c" />
+    </linearGradient>
+
+    <!-- Dabba Body Gradient -->
+    <linearGradient id="dabbaBody" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#f4f4f5" />
+    </linearGradient>
+
+    <!-- Compartment Inner Shadow/Gradient -->
+    <linearGradient id="grainGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a" />
+      <stop offset="100%" stop-color="#f59e0b" />
+    </linearGradient>
+
+    <linearGradient id="curryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fb923c" />
+      <stop offset="100%" stop-color="#c2410c" />
+    </linearGradient>
+
+    <linearGradient id="greensGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4ade80" />
+      <stop offset="100%" stop-color="#15803d" />
+    </linearGradient>
+
+    <linearGradient id="metalLatch" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#e4e4e7" />
+      <stop offset="50%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#d4d4d8" />
+    </linearGradient>
+
+    <filter id="dropShadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#7c2d12" flood-opacity="0.35" />
+    </filter>
+
+    <filter id="innerGlow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.12" />
+    </filter>
+  </defs>
+
+  <!-- Full Bleed Square Background for Maskable Icon Spec -->
+  <rect width="512" height="512" fill="url(#bgGrad)" />
+
+  <!-- Centered Scaled Content within Safe Zone (80% diameter circle = 410px) -->
+  <g transform="translate(51, 51) scale(0.8)">
+    <g filter="url(#dropShadow)">
+      <!-- Bento Box Outer Shell -->
+      <rect x="96" y="112" width="320" height="304" rx="44" fill="url(#dabbaBody)" stroke="#e4e4e7" stroke-width="6" />
+
+      <!-- Dabba Metallic Top Handle / Latches -->
+      <rect x="206" y="94" width="100" height="22" rx="11" fill="url(#metalLatch)" stroke="#d4d4d8" stroke-width="3" />
+      <!-- Side Latches representing traditional Indian Dabba clips -->
+      <rect x="84" y="240" width="14" height="48" rx="6" fill="url(#metalLatch)" stroke="#cbd5e1" stroke-width="2" />
+      <rect x="414" y="240" width="14" height="48" rx="6" fill="url(#metalLatch)" stroke="#cbd5e1" stroke-width="2" />
+
+      <!-- Chef Hat Crest on Handle -->
+      <path d="M236 105 C236 99 242 96 248 97 C250 93 255 91 260 93 C265 91 271 94 272 98 C276 99 278 103 276 107 Z" fill="#ea580c" />
+      <rect x="238" y="106" width="36" height="5" rx="2" fill="#ea580c" />
+
+      <!-- Bento Compartment 1: Left Main Grain / Carb Section -->
+      <rect x="120" y="136" width="128" height="256" rx="28" fill="url(#grainGrad)" filter="url(#innerGlow)" />
+      
+      <!-- Warm Steaming Grain Detail & Steam Waves -->
+      <circle cx="184" cy="276" r="44" fill="#ffffff" fill-opacity="0.3" />
+      <circle cx="184" cy="276" r="34" fill="#fef08a" />
+      <!-- Steam Curves -->
+      <path d="M168 200 Q162 182 170 166" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-opacity="0.9" />
+      <path d="M184 196 Q178 176 186 158" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-opacity="0.9" />
+      <path d="M200 200 Q194 182 202 166" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-opacity="0.9" />
+
+      <!-- Sesame / Grain sprinkles -->
+      <circle cx="178" cy="270" r="3" fill="#78350f" />
+      <circle cx="190" cy="268" r="3" fill="#78350f" />
+      <circle cx="184" cy="282" r="3" fill="#78350f" />
+      <circle cx="172" cy="280" r="3" fill="#78350f" />
+      <circle cx="194" cy="280" r="3" fill="#78350f" />
+
+      <!-- Bento Compartment 2: Top Right Fresh Greens / Veggies Section -->
+      <rect x="264" y="136" width="128" height="120" rx="28" fill="url(#greensGrad)" filter="url(#innerGlow)" />
+      <path d="M300 206 C300 176 332 160 348 160 C348 192 328 214 300 206 Z" fill="#86efac" />
+      <path d="M304 204 L340 168" stroke="#15803d" stroke-width="3" stroke-linecap="round" />
+      <circle cx="346" cy="210" r="10" fill="#bbf7d0" />
+      <circle cx="330" cy="222" r="8" fill="#86efac" />
+
+      <!-- Bento Compartment 3: Bottom Right Savory Protein / Rich Curry Section -->
+      <rect x="264" y="272" width="128" height="120" rx="28" fill="url(#curryGrad)" filter="url(#innerGlow)" />
+      <ellipse cx="328" cy="332" rx="42" ry="34" fill="#ea580c" />
+      <circle cx="328" cy="332" r="22" fill="#fed7aa" fill-opacity="0.8" />
+      <circle cx="328" cy="332" r="14" fill="#c2410c" />
+      <path d="M328 322 C324 326 324 334 328 338 C332 334 332 326 328 322 Z" fill="#22c55e" />
+    </g>
+  </g>
+</svg>
