@@ -32,7 +32,7 @@ describe('DailyIngredients', () => {
     }
   ];
 
-  it('renders title, total count badge, and items', () => {
+  it('renders title and total count badge, and is collapsed by default', () => {
     render(
       <DailyIngredients
         dayName="Monday"
@@ -44,11 +44,12 @@ describe('DailyIngredients', () => {
 
     expect(screen.getByText("Today's Ingredients")).toBeTruthy();
     expect(screen.getByText('4 items')).toBeTruthy();
-    expect(screen.getByText('3 eggs')).toBeTruthy();
-    expect(screen.getByText('2 cups spinach')).toBeTruthy();
+    // Hidden by default
+    expect(screen.queryByText('3 eggs')).toBeNull();
+    expect(screen.queryByText('2 cups spinach')).toBeNull();
   });
 
-  it('filters ingredients when a meal filter button is clicked', () => {
+  it('expands when clicked and filters ingredients when a meal filter button is clicked', () => {
     render(
       <DailyIngredients
         dayName="Monday"
@@ -57,6 +58,13 @@ describe('DailyIngredients', () => {
         onToggleItem={() => {}}
       />
     );
+
+    // Expand card
+    const toggleHeaderBtn = screen.getByRole('button', { name: /today's ingredients/i });
+    fireEvent.click(toggleHeaderBtn);
+
+    expect(screen.getByText('3 eggs')).toBeTruthy();
+    expect(screen.getByText('2 cups spinach')).toBeTruthy();
 
     // Click Breakfast filter
     const breakfastBtn = screen.getByRole('button', { name: /^breakfast/i });
@@ -84,6 +92,9 @@ describe('DailyIngredients', () => {
       />
     );
 
+    // Expand card
+    fireEvent.click(screen.getByRole('button', { name: /today's ingredients/i }));
+
     const eggItem = screen.getByRole('checkbox', { name: /3 eggs/i });
     fireEvent.click(eggItem);
 
@@ -101,11 +112,14 @@ describe('DailyIngredients', () => {
     );
 
     expect(screen.getByText('1/4 ready')).toBeTruthy();
+
+    // Expand to check item style
+    fireEvent.click(screen.getByRole('button', { name: /today's ingredients/i }));
     const eggText = screen.getByText('3 eggs');
     expect(eggText.className).toContain('line-through');
   });
 
-  it('allows collapsing and expanding the ingredients list', () => {
+  it('allows expanding and collapsing the ingredients list', () => {
     render(
       <DailyIngredients
         dayName="Monday"
@@ -115,19 +129,19 @@ describe('DailyIngredients', () => {
       />
     );
 
-    // Initial state is open
-    expect(screen.getByText('3 eggs')).toBeTruthy();
-
-    // Click collapse header button
-    const toggleHeaderBtn = screen.getByRole('button', { name: /toggle today's ingredients/i });
-    fireEvent.click(toggleHeaderBtn);
-
-    // Content should be hidden
+    // Initial state is closed
+    const toggleHeaderBtn = screen.getByRole('button', { name: /today's ingredients/i });
+    expect(toggleHeaderBtn.getAttribute('aria-expanded')).toBe('false');
     expect(screen.queryByText('3 eggs')).toBeNull();
 
-    // Click again to expand
+    // Click to expand
     fireEvent.click(toggleHeaderBtn);
+    expect(toggleHeaderBtn.getAttribute('aria-expanded')).toBe('true');
     expect(screen.getByText('3 eggs')).toBeTruthy();
+
+    // Click again to collapse
+    fireEvent.click(toggleHeaderBtn);
+    expect(toggleHeaderBtn.getAttribute('aria-expanded')).toBe('false');
   });
 
   it('returns null or empty state if no meals or ingredients exist', () => {

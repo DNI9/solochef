@@ -145,9 +145,13 @@ describe('Page', () => {
     render(<Page />);
     fireEvent.click(screen.getByText('MON'));
 
-    // Check that DailyIngredients card is rendered
+    // Check that DailyIngredients card is rendered but collapsed by default
     expect(screen.getByText("Today's Ingredients")).toBeTruthy();
     expect(screen.getByText('2 items')).toBeTruthy();
+    expect(screen.queryByText('3 organic eggs')).toBeNull();
+
+    // Click header to expand
+    fireEvent.click(screen.getByRole('button', { name: /today's ingredients/i }));
     expect(screen.getByText('3 organic eggs')).toBeTruthy();
 
     // Click checkbox to toggle ingredient
