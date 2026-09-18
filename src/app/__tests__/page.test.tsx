@@ -110,4 +110,54 @@ describe('Page', () => {
 
     Storage.prototype.getItem = () => null;
   });
+
+  it('renders today\'s ingredients on active day and allows toggling checklist items', () => {
+    const mockPlanWithIngredients = {
+      Monday: {
+        prepAlert: null,
+        meals: [
+          {
+            name: 'Breakfast',
+            title: 'Scramble',
+            type: 'Protein',
+            time: '10m',
+            emoji: '🍳',
+            bg: 'bg-orange-100',
+            border: 'border-orange-300',
+            text: 'text-orange-900',
+            ingredients: ['3 organic eggs', '1 small onion'],
+            recipe: ['Cook eggs.']
+          }
+        ]
+      },
+      Tuesday: { prepAlert: null, meals: [] },
+      Wednesday: { prepAlert: null, meals: [] },
+      Thursday: { prepAlert: null, meals: [] },
+      Friday: { prepAlert: null, meals: [] },
+      Saturday: { prepAlert: null, meals: [] },
+      Sunday: { prepAlert: null, meals: [] }
+    };
+    Storage.prototype.getItem = (key: string) => {
+      if (key === 'solochef_meal_plan') return JSON.stringify(mockPlanWithIngredients);
+      return null;
+    };
+
+    render(<Page />);
+    fireEvent.click(screen.getByText('MON'));
+
+    // Check that DailyIngredients card is rendered
+    expect(screen.getByText("Today's Ingredients")).toBeTruthy();
+    expect(screen.getByText('2 items')).toBeTruthy();
+    expect(screen.getByText('3 organic eggs')).toBeTruthy();
+
+    // Click checkbox to toggle ingredient
+    const eggItem = screen.getByRole('checkbox', { name: /3 organic eggs/i });
+    fireEvent.click(eggItem);
+
+    // Counter updates to 1/2 ready
+    expect(screen.getByText('1/2 ready')).toBeTruthy();
+
+    Storage.prototype.getItem = () => null;
+  });
 });
+

@@ -12,6 +12,7 @@ interface MealCardProps {
     bg: string;
     border: string;
     text: string;
+    ingredients?: string[];
     recipe: string[] | string;
   };
   isOpen: boolean;
@@ -106,6 +107,22 @@ export default function MealCard({ mealName, data, isOpen, onClick }: MealCardPr
                   </span>
                 )}
               </div>
+
+              {data.ingredients && data.ingredients.length > 0 && (
+                <div className="bg-white/60 backdrop-blur-xs rounded-2xl p-3.5 mb-3 border border-white/80 shadow-2xs">
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-zinc-600 mb-2">
+                    Ingredients
+                  </h4>
+                  <ul className="space-y-1.5 select-text">
+                    {data.ingredients.map((ing, i) => (
+                      <li key={i} className="flex items-center gap-2 text-xs font-medium text-zinc-800">
+                        <span className="w-1.5 h-1.5 rounded-full bg-orange-400 shrink-0"></span>
+                        <span>{ing}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               {steps.length > 0 && (
                 <div className="bg-white/60 backdrop-blur-xs rounded-2xl p-3.5 mb-3.5 border border-white/80 shadow-2xs">

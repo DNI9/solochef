@@ -264,6 +264,128 @@ describe('validateMealPlan', () => {
     expect(() => validateMealPlan(invalidJson)).toThrow(/Recipe step at index 0 too long/i);
   });
 
+  it('should parse valid meal plan with ingredients array', () => {
+    const validJson = JSON.stringify({
+      Monday: {
+        prepAlert: null,
+        meals: [
+          {
+            name: 'Breakfast',
+            title: 'Veggie Scramble',
+            type: 'High-Protein',
+            time: '10m',
+            emoji: '🍳',
+            bg: 'bg-orange-100',
+            border: 'border-orange-300',
+            text: 'text-orange-900',
+            ingredients: ['3 eggs', '1 onion', '1 tomato'],
+            recipe: ['Whisk and cook.']
+          }
+        ]
+      },
+      Tuesday: { prepAlert: null, meals: [] },
+      Wednesday: { prepAlert: null, meals: [] },
+      Thursday: { prepAlert: null, meals: [] },
+      Friday: { prepAlert: null, meals: [] },
+      Saturday: { prepAlert: null, meals: [] },
+      Sunday: { prepAlert: null, meals: [] }
+    });
+
+    const parsed = validateMealPlan(validJson);
+    expect(parsed.Monday?.meals[0]?.ingredients).toEqual(['3 eggs', '1 onion', '1 tomato']);
+  });
+
+  it('should maintain backward compatibility when meals do not have ingredients', () => {
+    const validLegacyJson = JSON.stringify({
+      Monday: {
+        prepAlert: null,
+        meals: [
+          {
+            name: 'Breakfast',
+            title: 'Eggs',
+            type: 'Protein',
+            time: '5m',
+            emoji: '🍳',
+            bg: 'bg-orange-100',
+            border: 'border-orange-300',
+            text: 'text-orange-900',
+            recipe: ['Cook eggs.']
+          }
+        ]
+      },
+      Tuesday: { prepAlert: null, meals: [] },
+      Wednesday: { prepAlert: null, meals: [] },
+      Thursday: { prepAlert: null, meals: [] },
+      Friday: { prepAlert: null, meals: [] },
+      Saturday: { prepAlert: null, meals: [] },
+      Sunday: { prepAlert: null, meals: [] }
+    });
+
+    const parsed = validateMealPlan(validLegacyJson);
+    expect(parsed.Monday?.meals[0]?.ingredients).toBeUndefined();
+  });
+
+  it('should throw when ingredients is not an array of strings', () => {
+    const invalidJson = JSON.stringify({
+      Monday: {
+        prepAlert: null,
+        meals: [
+          {
+            name: 'Breakfast',
+            title: 'Eggs',
+            type: 'Protein',
+            time: '5m',
+            emoji: '🍳',
+            bg: 'bg-orange-100',
+            border: 'border-orange-300',
+            text: 'text-orange-900',
+            ingredients: 'not-an-array',
+            recipe: ['Cook eggs.']
+          }
+        ]
+      },
+      Tuesday: { prepAlert: null, meals: [] },
+      Wednesday: { prepAlert: null, meals: [] },
+      Thursday: { prepAlert: null, meals: [] },
+      Friday: { prepAlert: null, meals: [] },
+      Saturday: { prepAlert: null, meals: [] },
+      Sunday: { prepAlert: null, meals: [] }
+    });
+
+    expect(() => validateMealPlan(invalidJson)).toThrow(/Invalid ingredients for Monday Breakfast/i);
+  });
+
+  it('should throw when ingredients array exceeds maximum limit of 50 items', () => {
+    const tooManyIngredients = Array.from({ length: 51 }, (_, i) => `Ingredient ${i + 1}`);
+    const invalidJson = JSON.stringify({
+      Monday: {
+        prepAlert: null,
+        meals: [
+          {
+            name: 'Breakfast',
+            title: 'Eggs',
+            type: 'Protein',
+            time: '5m',
+            emoji: '🍳',
+            bg: 'bg-orange-100',
+            border: 'border-orange-300',
+            text: 'text-orange-900',
+            ingredients: tooManyIngredients,
+            recipe: ['Cook eggs.']
+          }
+        ]
+      },
+      Tuesday: { prepAlert: null, meals: [] },
+      Wednesday: { prepAlert: null, meals: [] },
+      Thursday: { prepAlert: null, meals: [] },
+      Friday: { prepAlert: null, meals: [] },
+      Saturday: { prepAlert: null, meals: [] },
+      Sunday: { prepAlert: null, meals: [] }
+    });
+
+    expect(() => validateMealPlan(invalidJson)).toThrow(/Too many ingredients for Monday Breakfast/i);
+  });
+
   it('should throw on missing meal array', () => {
     const invalidJson = JSON.stringify({
       Monday: {}
@@ -282,10 +404,17 @@ describe('SCHEMA_TEMPLATE and LLM_INSTRUCTION', () => {
     expect(SCHEMA_TEMPLATE).toMatch(/Step 1/i);
   });
 
-  it('LLM_INSTRUCTION should instruct LLMs to generate step-by-step numbered recipe instructions', () => {
+  it('SCHEMA_TEMPLATE should include quantified ingredients per meal', () => {
+    expect(SCHEMA_TEMPLATE).toContain('"ingredients": [');
+    expect(SCHEMA_TEMPLATE).toMatch(/3 large eggs/i);
+  });
+
+  it('LLM_INSTRUCTION should instruct LLMs to generate step-by-step numbered recipe instructions and meal ingredients', () => {
     expect(LLM_INSTRUCTION).toBeTruthy();
     expect(LLM_INSTRUCTION).toMatch(/step-by-step/i);
+    expect(LLM_INSTRUCTION).toMatch(/ingredients/i);
     expect(LLM_INSTRUCTION).toContain(SCHEMA_TEMPLATE);
   });
 });
+
 

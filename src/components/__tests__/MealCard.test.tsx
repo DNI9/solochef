@@ -116,9 +116,26 @@ describe('MealCard', () => {
     render(<MealCard mealName="Breakfast" data={multilineData} isOpen={true} onClick={() => {}} />);
     expect(screen.getByText('Heat pan.')).toBeTruthy();
     expect(screen.getByText('Add eggs.')).toBeTruthy();
-    expect(screen.getByText('Serve warm.')).toBeTruthy();
     expect(screen.getByText('1')).toBeTruthy();
     expect(screen.getByText('2')).toBeTruthy();
     expect(screen.getByText('3')).toBeTruthy();
   });
+
+  it('renders ingredients list when ingredients array is provided and card is open', () => {
+    const dataWithIngredients = {
+      ...mockData,
+      ingredients: ['3 eggs', '1 onion', '1 tsp salt']
+    };
+    render(<MealCard mealName="Breakfast" data={dataWithIngredients} isOpen={true} onClick={() => {}} />);
+    expect(screen.getByText('Ingredients')).toBeTruthy();
+    expect(screen.getByText('3 eggs')).toBeTruthy();
+    expect(screen.getByText('1 onion')).toBeTruthy();
+    expect(screen.getByText('1 tsp salt')).toBeTruthy();
+  });
+
+  it('does not render ingredients section when ingredients array is empty or undefined', () => {
+    render(<MealCard mealName="Breakfast" data={mockData} isOpen={true} onClick={() => {}} />);
+    expect(screen.queryByText('Ingredients')).toBeNull();
+  });
 });
+

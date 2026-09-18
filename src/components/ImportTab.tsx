@@ -79,7 +79,7 @@ export default function ImportTab({ onImport }: ImportTabProps) {
         <div className="p-3.5 bg-orange-50/80 border border-orange-200/80 rounded-xl mb-4 text-xs text-orange-950 flex items-start gap-2">
           <Sparkles size={16} className="text-orange-600 mt-0.5 shrink-0" />
           <div className="leading-relaxed">
-            <span className="font-bold">Step-by-Step Recipes:</span> Each meal must include a <code className="bg-orange-100/90 text-orange-900 px-1 py-0.5 rounded font-mono text-[11px]">recipe</code> array containing sequential numbered instructions (e.g. <code className="bg-orange-100/90 text-orange-900 px-1 py-0.5 rounded font-mono text-[11px]">[&quot;Step 1: ...&quot;, &quot;Step 2: ...&quot;]</code>).
+            <span className="font-bold">Step-by-Step Recipes:</span> Each meal must include an <code className="bg-orange-100/90 text-orange-900 px-1 py-0.5 rounded font-mono text-[11px]">ingredients</code> list and sequential numbered <code className="bg-orange-100/90 text-orange-900 px-1 py-0.5 rounded font-mono text-[11px]">recipe</code> instructions (e.g. <code className="bg-orange-100/90 text-orange-900 px-1 py-0.5 rounded font-mono text-[11px]">[&quot;Step 1: ...&quot;, &quot;Step 2: ...&quot;]</code>).
           </div>
         </div>
 

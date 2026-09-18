@@ -15,6 +15,15 @@ export const SCHEMA_TEMPLATE = `{
         "bg": "bg-orange-100",
         "border": "border-orange-300",
         "text": "text-orange-900",
+        "ingredients": [
+          "3 large eggs",
+          "1 small red onion (finely diced)",
+          "1 medium tomato (chopped)",
+          "1 green chili (finely chopped)",
+          "1 tsp cooking oil",
+          "1/4 tsp turmeric powder",
+          "Fresh coriander for garnish"
+        ],
         "recipe": [
           "Step 1: Whisk 3 eggs with a pinch of turmeric, chili powder, and salt.",
           "Step 2: Heat 1 tsp oil in a skillet and sauté finely chopped onions and tomatoes for 2 mins.",
@@ -31,6 +40,15 @@ export const SCHEMA_TEMPLATE = `{
         "bg": "bg-green-100",
         "border": "border-green-300",
         "text": "text-green-900",
+        "ingredients": [
+          "1 cup canned chickpeas (drained and rinsed)",
+          "1 mini cucumber (diced)",
+          "8 cherry tomatoes (halved)",
+          "2 cups baby spinach",
+          "2 tbsp kalamata olives",
+          "1 tbsp extra virgin olive oil",
+          "1 tbsp lemon juice"
+        ],
         "recipe": [
           "Step 1: Drain and rinse 1 cup of canned chickpeas.",
           "Step 2: Dice cucumbers, cherry tomatoes, and kalamata olives.",
@@ -47,6 +65,14 @@ export const SCHEMA_TEMPLATE = `{
         "bg": "bg-indigo-100",
         "border": "border-indigo-300",
         "text": "text-indigo-900",
+        "ingredients": [
+          "1 salmon fillet (6 oz)",
+          "1 tbsp unsalted butter",
+          "2 cloves garlic (minced)",
+          "1 cup broccoli florets",
+          "1 tbsp fresh lemon juice",
+          "Salt and black pepper to taste"
+        ],
         "recipe": [
           "Step 1: Pat salmon fillet dry and season both sides with salt and black pepper.",
           "Step 2: Melt butter in a non-stick skillet over medium-high heat with minced garlic.",
@@ -75,13 +101,14 @@ export const LLM_INSTRUCTION = `You are an expert chef and solo-living meal plan
 CRITICAL REQUIREMENTS:
 1. Days: Include all 7 days: "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday".
 2. Meals: For each day, include 3 meals ("Breakfast", "Lunch", "Dinner").
-3. Step-by-Step Recipes: The "recipe" field for EVERY meal MUST be an array of strings representing sequential, numbered step-by-step cooking instructions (e.g. ["Step 1: ...", "Step 2: ...", "Step 3: ..."]). Do NOT return a single text block.
-4. Meal Styling:
+3. Meal Ingredients: For EVERY meal, provide an "ingredients" array listing all quantified ingredients needed (e.g. ["3 large eggs", "1 onion (diced)", "1 tsp oil"]).
+4. Step-by-Step Recipes: The "recipe" field for EVERY meal MUST be an array of strings representing sequential, numbered step-by-step cooking instructions (e.g. ["Step 1: ...", "Step 2: ...", "Step 3: ..."]). Do NOT return a single text block.
+5. Meal Styling:
    - Breakfast: bg: "bg-orange-100", border: "border-orange-300", text: "text-orange-900"
    - Lunch: bg: "bg-green-100", border: "border-green-300", text: "text-green-900"
    - Dinner: bg: "bg-indigo-100", border: "border-indigo-300", text: "text-indigo-900"
-5. Grocery List: Include a consolidated "groceries" array grouped by category with quantified items.
-6. Output: Output strictly valid JSON matching this schema with no markdown formatting ticks or conversational filler.
+6. Grocery List: Include a consolidated "groceries" array grouped by category with quantified items.
+7. Output: Output strictly valid JSON matching this schema with no markdown formatting ticks or conversational filler.
 
 JSON SCHEMA:
 ${SCHEMA_TEMPLATE}`;
@@ -122,6 +149,27 @@ export function validateMealPlan(jsonString: string): MealPlanData {
         if (typeof m.border !== 'string' || m.border.length > 100 || !/^[a-zA-Z0-9\-\[\]#\/]+$/.test(m.border)) throw new Error(`Invalid border for ${day} ${m.name}`);
         if (typeof m.text !== 'string' || m.text.length > 100 || !/^[a-zA-Z0-9\-\[\]#\/]+$/.test(m.text)) throw new Error(`Invalid text for ${day} ${m.name}`);
         
+        let sanitizedIngredients: string[] | undefined = undefined;
+        if (m.ingredients !== undefined && m.ingredients !== null) {
+          if (!Array.isArray(m.ingredients)) {
+            throw new Error(`Invalid ingredients for ${day} ${m.name}: must be an array of strings`);
+          }
+          if (m.ingredients.length > 50) {
+            throw new Error(`Too many ingredients for ${day} ${m.name} (max 50)`);
+          }
+          sanitizedIngredients = [];
+          for (let ingIdx = 0; ingIdx < m.ingredients.length; ingIdx++) {
+            const item = m.ingredients[ingIdx];
+            if (typeof item !== 'string' || !item.trim()) {
+              throw new Error(`Invalid ingredient item at index ${ingIdx} for ${day} ${m.name}`);
+            }
+            if (item.length > 300) {
+              throw new Error(`Ingredient item at index ${ingIdx} too long for ${day} ${m.name} (max 300 chars)`);
+            }
+            sanitizedIngredients.push(item.trim());
+          }
+        }
+
         let recipeSteps: string[] = [];
         if (Array.isArray(m.recipe)) {
           if (m.recipe.length === 0) {
@@ -157,7 +205,16 @@ export function validateMealPlan(jsonString: string): MealPlanData {
         }
         
         sanitizedMeals.push({
-          name: m.name, title: m.title, type: m.type, time: m.time, emoji: m.emoji, bg: m.bg, border: m.border, text: m.text, recipe: recipeSteps
+          name: m.name,
+          title: m.title,
+          type: m.type,
+          time: m.time,
+          emoji: m.emoji,
+          bg: m.bg,
+          border: m.border,
+          text: m.text,
+          ...(sanitizedIngredients ? { ingredients: sanitizedIngredients } : {}),
+          recipe: recipeSteps
         });
       }
       

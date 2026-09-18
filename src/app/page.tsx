@@ -5,6 +5,7 @@ import { MEAL_DATABASE, GROCERY_LIST, MealPlanData, GroceryCategory } from '@/da
 import DayPill from '@/components/DayPill';
 import MealCard from '@/components/MealCard';
 import ImportTab from '@/components/ImportTab';
+import DailyIngredients from '@/components/DailyIngredients';
 import { Calendar, ShoppingCart, Bell, Check, FileJson } from 'lucide-react';
 import { validateMealPlan } from '@/utils/schema';
 
@@ -15,6 +16,7 @@ export default function BentoMealPlanner() {
   const [expandedMeal, setExpandedMeal] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'plan' | 'groceries' | 'import'>('plan');
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
+  const [dailyCheckedItems, setDailyCheckedItems] = useState<Record<string, boolean>>({});
   const [mealDb, setMealDb] = useState<MealPlanData>(MEAL_DATABASE);
 
   useEffect(() => {
@@ -33,6 +35,16 @@ export default function BentoMealPlanner() {
         console.error("Failed to load saved plan", e instanceof Error ? e.message : e);
       }
     }
+
+    // Load daily checked ingredients from localStorage
+    const savedDaily = localStorage.getItem('solochef_daily_checked_items');
+    if (savedDaily) {
+      try {
+        setDailyCheckedItems(JSON.parse(savedDaily));
+      } catch (e: unknown) {
+        console.error("Failed to load daily checked items", e instanceof Error ? e.message : e);
+      }
+    }
   }, []);
 
   const toggleGroceryItem = (category: string, itemIndex: number) => {
@@ -41,6 +53,19 @@ export default function BentoMealPlanner() {
       ...prev,
       [key]: !prev[key]
     }));
+  };
+
+  const toggleDailyIngredientItem = (key: string) => {
+    const updated = {
+      ...dailyCheckedItems,
+      [key]: !dailyCheckedItems[key]
+    };
+    setDailyCheckedItems(updated);
+    try {
+      localStorage.setItem('solochef_daily_checked_items', JSON.stringify(updated));
+    } catch (e) {
+      console.error("Failed to save daily checked items", e);
+    }
   };
 
   const currentDayName = DAYS[currentDayIndex];
@@ -100,6 +125,13 @@ export default function BentoMealPlanner() {
                       </div>
                     </div>
                   )}
+
+                  <DailyIngredients
+                    dayName={currentDayName}
+                    meals={dayData?.meals}
+                    checkedItems={dailyCheckedItems}
+                    onToggleItem={toggleDailyIngredientItem}
+                  />
 
                   <div className="flex flex-col items-center gap-3">
                     {dayData?.meals && dayData.meals.map((meal, index) => (
