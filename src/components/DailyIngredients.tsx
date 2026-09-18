@@ -117,11 +117,7 @@ export default function DailyIngredients({
             exit={{ height: 0, opacity: 0 }}
             className="px-4 overflow-hidden"
           >
-            <div 
-              className="pt-2 border-t border-amber-200/50 pb-4"
-              onClick={(e) => e.stopPropagation()}
-              onKeyDown={(e) => e.stopPropagation()}
-            >
+            <div className="pt-2 border-t border-amber-200/50 pb-4">
               {/* Filter Chips */}
               {availableMealNames.length > 2 && (
                 <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-2 mb-2.5">
