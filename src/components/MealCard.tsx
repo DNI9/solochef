@@ -1,6 +1,9 @@
+'use client';
+
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, Clock } from 'lucide-react';
+import AskGeminiButton from './AskGeminiButton';
 
 interface MealCardProps {
   mealName: string;
@@ -48,21 +51,24 @@ export default function MealCard({ mealName, data, isOpen, onClick }: MealCardPr
   return (
     <motion.div 
       layout
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onClick();
-        }
-      }}
-      className={`relative w-full rounded-[1.5rem] cursor-pointer overflow-hidden border-2 ${data.bg} ${data.border} shadow-xs select-none`}
-      onClick={onClick}
+      className={`relative w-full rounded-[1.5rem] overflow-hidden border-2 ${data.bg} ${data.border} shadow-xs`}
       animate={{ scale: isOpen ? 1.01 : 1 }}
-      whileTap={{ scale: 0.98 }}
       transition={{ type: "spring", stiffness: 400, damping: 25 }}
     >
-      <div className="p-4 flex items-stretch justify-between">
+      <div 
+        role="button"
+        tabIndex={0}
+        aria-expanded={isOpen}
+        aria-label={`${isOpen ? 'Collapse' : 'Expand'} ${mealName}: ${data.title}`}
+        onClick={onClick}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onClick();
+          }
+        }}
+        className="p-4 flex items-stretch justify-between cursor-pointer select-none"
+      >
         <div className="flex items-center gap-3.5 w-[75%]">
           <div className="w-12 h-12 bg-white/80 backdrop-blur-xs rounded-2xl flex items-center justify-center text-2xl shadow-xs shrink-0">
             {data.emoji}
@@ -141,27 +147,37 @@ export default function MealCard({ mealName, data, isOpen, onClick }: MealCardPr
                 </div>
               )}
 
-              <a
-                href={`https://www.youtube.com/results?search_query=${encodeURIComponent(`${data.title} recipe`)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                onKeyDown={(e) => e.stopPropagation()}
-                aria-label={`Search ${data.title} recipe on YouTube`}
-                className="min-h-[44px] w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 active:scale-[0.98] text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-xs transition-all cursor-pointer select-none"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  width="18"
-                  height="18"
-                  fill="currentColor"
-                  className="shrink-0"
-                  aria-hidden="true"
+              <div className="flex flex-col gap-2.5">
+                <AskGeminiButton
+                  meal={{
+                    title: data.title,
+                    ingredients: data.ingredients,
+                    recipe: data.recipe,
+                  }}
+                />
+
+                <a
+                  href={`https://www.youtube.com/results?search_query=${encodeURIComponent(`${data.title} recipe`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => e.stopPropagation()}
+                  aria-label={`Search ${data.title} recipe on YouTube`}
+                  className="min-h-[44px] w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 active:scale-[0.98] text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-xs transition-all cursor-pointer select-none"
                 >
-                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-                </svg>
-                <span>Search Recipe on YouTube</span>
-              </a>
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="18"
+                    height="18"
+                    fill="currentColor"
+                    className="shrink-0"
+                    aria-hidden="true"
+                  >
+                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                  </svg>
+                  <span>Search Recipe on YouTube</span>
+                </a>
+              </div>
             </div>
           </motion.div>
         )}

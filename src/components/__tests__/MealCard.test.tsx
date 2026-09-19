@@ -137,5 +137,10 @@ describe('MealCard', () => {
     render(<MealCard mealName="Breakfast" data={mockData} isOpen={true} onClick={() => {}} />);
     expect(screen.queryByText('Ingredients')).toBeNull();
   });
+
+  it('renders Ask Gemini button when card is open', () => {
+    render(<MealCard mealName="Breakfast" data={mockData} isOpen={true} onClick={() => {}} />);
+    expect(screen.getByRole('button', { name: /ask gemini about 3-egg veggie bhurji/i })).toBeTruthy();
+  });
 });
 
