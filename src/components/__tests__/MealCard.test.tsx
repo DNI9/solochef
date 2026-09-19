@@ -142,5 +142,41 @@ describe('MealCard', () => {
     render(<MealCard mealName="Breakfast" data={mockData} isOpen={true} onClick={() => {}} />);
     expect(screen.getByRole('button', { name: /ask gemini about 3-egg veggie bhurji/i })).toBeTruthy();
   });
+  it('applies rounded-lg to inner emoji container for concentric radius polish', () => {
+    render(<MealCard mealName="Breakfast" data={mockData} isOpen={false} onClick={() => {}} />);
+    const emojiBox = screen.getByText('🍳').closest('div');
+    expect(emojiBox?.className).toContain('rounded-lg');
+    expect(emojiBox?.className).not.toContain('rounded-2xl');
+  });
+
+  it('uses semantic button with aria-expanded for expansion header trigger', () => {
+    render(<MealCard mealName="Breakfast" data={mockData} isOpen={false} onClick={() => {}} />);
+    // The clickable header should be a button with aria-expanded
+    const button = screen.getByRole('button', { name: /3-egg veggie bhurji/i });
+    expect(button.getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('applies text-balance to meal title', () => {
+    render(<MealCard mealName="Breakfast" data={mockData} isOpen={false} onClick={() => {}} />);
+    const title = screen.getByText('3-Egg Veggie Bhurji');
+    expect(title.className).toContain('text-balance');
+  });
+
+  it('uses tabular-nums for step numbers', () => {
+    const arrayData = {
+      ...mockData,
+      recipe: ['Chop', 'Cook']
+    };
+    render(<MealCard mealName="Breakfast" data={arrayData} isOpen={true} onClick={() => {}} />);
+    const stepNumber = screen.getByText('1');
+    expect(stepNumber.className).toContain('tabular-nums');
+  });
+
+  it('YouTube action button uses refined secondary styling and preserves aria-label', () => {
+    render(<MealCard mealName="Breakfast" data={mockData} isOpen={true} onClick={() => {}} />);
+    const ytButton = screen.getByRole('link', { name: /youtube/i });
+    expect(ytButton.className).not.toContain('bg-red-600');
+    expect(ytButton.getAttribute('aria-label')).toBeTruthy();
+  });
 });
 

@@ -21,3 +21,5 @@
 - Use functional components and modern React 19 patterns.
 - Style components using Tailwind CSS 4 utility classes.
 - Follow Test-Driven Development (TDD) principles and ensure high test coverage.
+- Strictly adhere to the CEO Orchestration and ECC Workflow outlined in [AGENTS.md](file:///root/work/solochef/app/AGENTS.md).
+

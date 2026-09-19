@@ -7,6 +7,7 @@ import MealCard from '@/components/MealCard';
 import ImportTab from '@/components/ImportTab';
 import DailyIngredients from '@/components/DailyIngredients';
 import { Calendar, ShoppingCart, Bell, Check, FileJson } from 'lucide-react';
+import { LayoutGroup } from 'framer-motion';
 import { validateMealPlan } from '@/utils/schema';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as const;
@@ -45,27 +46,47 @@ export default function BentoMealPlanner() {
         console.error("Failed to load daily checked items", e instanceof Error ? e.message : e);
       }
     }
+
+    // Load grocery checked items from localStorage
+    const savedGrocery = localStorage.getItem('solochef_grocery_checked_items');
+    if (savedGrocery) {
+      try {
+        setCheckedItems(JSON.parse(savedGrocery));
+      } catch (e: unknown) {
+        console.error("Failed to load grocery checked items", e instanceof Error ? e.message : e);
+      }
+    }
   }, []);
 
   const toggleGroceryItem = (category: string, itemIndex: number) => {
     const key = `${category}-${itemIndex}`;
-    setCheckedItems(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }));
+    setCheckedItems(prev => {
+      const updated = {
+        ...prev,
+        [key]: !prev[key]
+      };
+      try {
+        localStorage.setItem('solochef_grocery_checked_items', JSON.stringify(updated));
+      } catch (e) {
+        console.error("Failed to save grocery checked items", e);
+      }
+      return updated;
+    });
   };
 
   const toggleDailyIngredientItem = (key: string) => {
-    const updated = {
-      ...dailyCheckedItems,
-      [key]: !dailyCheckedItems[key]
-    };
-    setDailyCheckedItems(updated);
-    try {
-      localStorage.setItem('solochef_daily_checked_items', JSON.stringify(updated));
-    } catch (e) {
-      console.error("Failed to save daily checked items", e);
-    }
+    setDailyCheckedItems(prev => {
+      const updated = {
+        ...prev,
+        [key]: !prev[key]
+      };
+      try {
+        localStorage.setItem('solochef_daily_checked_items', JSON.stringify(updated));
+      } catch (e) {
+        console.error("Failed to save daily checked items", e);
+      }
+      return updated;
+    });
   };
 
   const currentDayName = DAYS[currentDayIndex];
@@ -79,8 +100,12 @@ export default function BentoMealPlanner() {
   
   const handleImportPlan = (newPlan: MealPlanData) => {
     setMealDb(newPlan);
+    setCheckedItems({});
+    setDailyCheckedItems({});
     try {
       localStorage.setItem('solochef_meal_plan', JSON.stringify(newPlan));
+      localStorage.removeItem('solochef_grocery_checked_items');
+      localStorage.removeItem('solochef_daily_checked_items');
     } catch (e) {
       console.error("Failed to save plan to localStorage", e);
     }
@@ -115,7 +140,7 @@ export default function BentoMealPlanner() {
                   </div>
                 </div>
 
-                <main className="flex-1 overflow-y-auto px-5 py-5 pb-28 native-scroll no-scrollbar hide-scrollbar">
+                <main className="flex-1 overflow-y-auto px-5 py-5 pb-28 native-scroll no-scrollbar hide-scrollbar overscroll-contain">
                   {dayData?.prepAlert && (
                     <div className="mb-5 bg-amber-50/90 border border-amber-200/80 text-amber-900 px-4 py-3 rounded-2xl flex items-start gap-3 shadow-xs">
                       <Bell className="text-amber-600 mt-0.5 shrink-0" size={18} />
@@ -126,35 +151,33 @@ export default function BentoMealPlanner() {
                     </div>
                   )}
 
-                  <DailyIngredients
-                    dayName={currentDayName}
-                    meals={dayData?.meals}
-                    checkedItems={dailyCheckedItems}
-                    onToggleItem={toggleDailyIngredientItem}
-                  />
+                  <LayoutGroup>
+                    <DailyIngredients
+                      key={currentDayName}
+                      dayName={currentDayName}
+                      meals={dayData?.meals}
+                      checkedItems={dailyCheckedItems}
+                      onToggleItem={toggleDailyIngredientItem}
+                    />
 
-                  <div className="flex flex-col items-center gap-3">
-                    {dayData?.meals && dayData.meals.map((meal, index) => (
-                      <React.Fragment key={`${meal.name}-${index}`}>
+                    <div className="flex flex-col items-stretch gap-4">
+                      {dayData?.meals && dayData.meals.map((meal, index) => (
                         <MealCard 
+                          key={`${meal.name}-${index}`}
                           mealName={meal.name} 
                           data={meal} 
                           isOpen={expandedMeal === meal.name.toLowerCase()} 
                           onClick={() => handleMealClick(meal.name.toLowerCase())} 
                         />
-                        
-                        {index < dayData.meals.length - 1 && (
-                          <div className="w-1 h-2.5 bg-zinc-300 rounded-full opacity-60"></div>
-                        )}
-                      </React.Fragment>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  </LayoutGroup>
 
                   <div className="h-6"></div>
                 </main>
               </>
             ) : (
-              <main className="flex-1 flex flex-col items-center justify-center px-6 py-12 text-center pb-28 native-scroll no-scrollbar hide-scrollbar">
+              <main className="flex-1 flex flex-col items-center justify-center px-6 py-12 text-center pb-28 native-scroll no-scrollbar hide-scrollbar overscroll-contain">
                 <div className="w-20 h-20 bg-orange-50 border border-orange-100 rounded-full flex items-center justify-center mb-6 shadow-xs">
                   <Calendar size={32} className="text-orange-500" />
                 </div>
@@ -175,7 +198,7 @@ export default function BentoMealPlanner() {
         )}
         
         {activeTab === 'groceries' && (
-          <main className="flex-1 overflow-y-auto px-5 py-5 pb-28 bg-yellow-50/30 native-scroll no-scrollbar hide-scrollbar">
+          <main className="flex-1 overflow-y-auto px-5 py-5 pb-28 bg-yellow-50/30 native-scroll no-scrollbar hide-scrollbar overscroll-contain">
             <h2 className="text-xl font-black mb-5 flex items-center gap-2 text-zinc-900">
               🛒 Weekly Haul
             </h2>
@@ -204,10 +227,12 @@ export default function BentoMealPlanner() {
                           <li key={i}>
                             <button
                               type="button"
-                              className="min-h-[44px] flex items-center gap-3 text-sm font-medium text-zinc-700 cursor-pointer select-none text-left w-full active:scale-[0.99] transition-transform rounded-xl px-2 py-1 hover:bg-zinc-50"
+                              role="checkbox"
+                              aria-checked={Boolean(isChecked)}
+                              className="min-h-[44px] flex items-center gap-3 text-sm font-medium text-zinc-700 cursor-pointer select-none text-left w-full active:scale-[0.99] transition-transform rounded-xl px-2 py-1 hover:bg-zinc-50 focus-visible:outline-2 focus-visible:outline-orange-500"
                               onClick={() => toggleGroceryItem(list.category, i)}
                             >
-                              <div className={`w-5 h-5 rounded-md flex items-center justify-center border-2 shrink-0 transition-colors ${isChecked ? 'bg-orange-500 border-orange-500 text-white' : 'border-zinc-300 bg-white'}`}>
+                              <div className={`w-5 h-5 rounded-md flex items-center justify-center border-2 shrink-0 transition-colors ${isChecked ? 'bg-orange-600 border-orange-600 text-white' : 'border-zinc-300 bg-white'}`}>
                                 {isChecked && <Check size={14} strokeWidth={3} />}
                               </div>
                               <span className={`transition-opacity ${isChecked ? 'line-through text-zinc-400 opacity-60' : ''}`}>{item}</span>
@@ -231,7 +256,7 @@ export default function BentoMealPlanner() {
         <nav className="absolute bottom-0 left-0 right-0 w-full bg-white/90 backdrop-blur-xl border-t border-zinc-200/70 px-4 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))] flex justify-around items-center z-30 shadow-[0_-8px_30px_rgba(0,0,0,0.06)]">
           <button 
             onClick={() => setActiveTab('plan')}
-            className={`min-h-[44px] min-w-[44px] px-4 py-1.5 flex flex-col items-center justify-center gap-1 rounded-2xl active:scale-90 transition-all duration-150 ${activeTab === 'plan' ? 'text-orange-600 font-bold' : 'text-zinc-400 hover:text-zinc-600'}`}
+            className={`min-h-[44px] min-w-[44px] px-4 py-1.5 flex flex-col items-center justify-center gap-1 rounded-2xl active:scale-90 transition-all duration-150 ${activeTab === 'plan' ? 'bg-orange-50 text-orange-600 font-bold' : 'text-zinc-400 hover:text-zinc-600'}`}
             aria-label="Plan"
           >
             <Calendar size={22} strokeWidth={activeTab === 'plan' ? 2.5 : 2} />
@@ -240,7 +265,7 @@ export default function BentoMealPlanner() {
           
           <button 
             onClick={() => setActiveTab('groceries')}
-            className={`min-h-[44px] min-w-[44px] px-4 py-1.5 flex flex-col items-center justify-center gap-1 rounded-2xl active:scale-90 transition-all duration-150 ${activeTab === 'groceries' ? 'text-orange-600 font-bold' : 'text-zinc-400 hover:text-zinc-600'}`}
+            className={`min-h-[44px] min-w-[44px] px-4 py-1.5 flex flex-col items-center justify-center gap-1 rounded-2xl active:scale-90 transition-all duration-150 ${activeTab === 'groceries' ? 'bg-orange-50 text-orange-600 font-bold' : 'text-zinc-400 hover:text-zinc-600'}`}
             aria-label="Groceries"
           >
             <ShoppingCart size={22} strokeWidth={activeTab === 'groceries' ? 2.5 : 2} />
@@ -249,7 +274,7 @@ export default function BentoMealPlanner() {
           
           <button 
             onClick={() => setActiveTab('import')}
-            className={`min-h-[44px] min-w-[44px] px-4 py-1.5 flex flex-col items-center justify-center gap-1 rounded-2xl active:scale-90 transition-all duration-150 ${activeTab === 'import' ? 'text-orange-600 font-bold' : 'text-zinc-400 hover:text-zinc-600'}`}
+            className={`min-h-[44px] min-w-[44px] px-4 py-1.5 flex flex-col items-center justify-center gap-1 rounded-2xl active:scale-90 transition-all duration-150 ${activeTab === 'import' ? 'bg-orange-50 text-orange-600 font-bold' : 'text-zinc-400 hover:text-zinc-600'}`}
             aria-label="Import"
           >
             <FileJson size={22} strokeWidth={activeTab === 'import' ? 2.5 : 2} />

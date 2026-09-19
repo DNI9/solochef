@@ -163,5 +163,68 @@ describe('Page', () => {
 
     Storage.prototype.getItem = () => null;
   });
+  it('uses role="checkbox" and aria-checked for grocery checklist items', () => {
+    const mockPlan = {
+      Monday: { prepAlert: null, meals: [] },
+      Tuesday: { prepAlert: null, meals: [] },
+      Wednesday: { prepAlert: null, meals: [] },
+      Thursday: { prepAlert: null, meals: [] },
+      Friday: { prepAlert: null, meals: [] },
+      Saturday: { prepAlert: null, meals: [] },
+      Sunday: { prepAlert: null, meals: [] },
+      groceries: [
+        { category: 'Fresh Produce', items: ['Apples'] }
+      ]
+    };
+    Storage.prototype.getItem = () => JSON.stringify(mockPlan);
+
+    render(<Page />);
+    fireEvent.click(screen.getByText('Groceries'));
+    
+    const groceryItem = screen.getByRole('checkbox', { name: /apples/i });
+    expect(groceryItem).toBeTruthy();
+    expect(groceryItem.hasAttribute('aria-checked')).toBe(true);
+
+    Storage.prototype.getItem = () => null;
+  });
+
+  it('includes soft background pill indicator for active tab in bottom bar', () => {
+    render(<Page />);
+    const planTabBtn = screen.getByRole('button', { name: /plan/i });
+    expect(planTabBtn.className).toMatch(/bg-orange-50|bg-orange-100\/60|bg-orange-100/);
+  });
+
+  it('applies overscroll-contain to main container', () => {
+    render(<Page />);
+    const mainContent = screen.getByRole('main');
+    expect(mainContent.className).toContain('overscroll-contain');
+  });
+
+  it('does not render separator lines between meal cards', () => {
+    const mockPlan = {
+      Monday: {
+        prepAlert: null,
+        meals: [
+          { name: 'Breakfast', title: 'Eggs', type: 'Protein', time: '10m', emoji: '🍳', bg: 'bg-orange-100', border: 'border-orange-300', text: 'text-orange-900', recipe: 'Cook' },
+          { name: 'Lunch', title: 'Salad', type: 'Fiber', time: '15m', emoji: '🥗', bg: 'bg-green-100', border: 'border-green-300', text: 'text-green-900', recipe: 'Toss' }
+        ]
+      },
+      Tuesday: { prepAlert: null, meals: [] },
+      Wednesday: { prepAlert: null, meals: [] },
+      Thursday: { prepAlert: null, meals: [] },
+      Friday: { prepAlert: null, meals: [] },
+      Saturday: { prepAlert: null, meals: [] },
+      Sunday: { prepAlert: null, meals: [] }
+    };
+    Storage.prototype.getItem = () => JSON.stringify(mockPlan);
+
+    const { container } = render(<Page />);
+    fireEvent.click(screen.getByText('MON'));
+    
+    const separators = container.querySelectorAll('.w-1.h-2\\.5, .w-1\\.5.h-2\\.5');
+    expect(separators.length).toBe(0);
+
+    Storage.prototype.getItem = () => null;
+  });
 });
 

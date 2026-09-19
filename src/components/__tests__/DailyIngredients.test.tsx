@@ -156,4 +156,73 @@ describe('DailyIngredients', () => {
 
     expect(container.firstChild).toBeNull();
   });
+
+  it('uses rounded-lg for inner emoji box for concentric radius polish', () => {
+    render(
+      <DailyIngredients
+        dayName="Monday"
+        meals={mockMeals}
+        checkedItems={{}}
+        onToggleItem={() => {}}
+      />
+    );
+    const emojiBox = screen.getByText('🥕').closest('div');
+    expect(emojiBox?.className).toContain('rounded-lg');
+    expect(emojiBox?.className).not.toContain('rounded-2xl');
+  });
+
+  it('ensures filter chips have minimum 44px touch target', () => {
+    render(
+      <DailyIngredients
+        dayName="Monday"
+        meals={mockMeals}
+        checkedItems={{}}
+        onToggleItem={() => {}}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: /today's ingredients/i }));
+    const allBtn = screen.getByRole('button', { name: /^all/i });
+    expect(allBtn.className).toMatch(/min-h-\[44px\]|h-11|h-12|p-[0-9]+/);
+  });
+
+  it('uses bg-orange-600 for checked checkbox state for improved contrast', () => {
+    render(
+      <DailyIngredients
+        dayName="Monday"
+        meals={mockMeals}
+        checkedItems={{ 'Monday-Breakfast-0': true }}
+        onToggleItem={() => {}}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: /today's ingredients/i }));
+    const checkbox = screen.getByRole('checkbox', { name: /3 eggs/i });
+    const indicator = checkbox.querySelector('.rounded-md');
+    expect(indicator?.className).toContain('bg-orange-600');
+    expect(indicator?.className).not.toContain('bg-orange-500');
+  });
+
+  it('includes dynamic count in header toggle aria-label', () => {
+    const { rerender } = render(
+      <DailyIngredients
+        dayName="Monday"
+        meals={mockMeals}
+        checkedItems={{}}
+        onToggleItem={() => {}}
+      />
+    );
+    let toggleBtn = screen.getByLabelText(/toggle today's ingredients, 4 items/i);
+    expect(toggleBtn).toBeTruthy();
+
+    rerender(
+      <DailyIngredients
+        dayName="Monday"
+        meals={mockMeals}
+        checkedItems={{ 'Monday-Breakfast-0': true }}
+        onToggleItem={() => {}}
+      />
+    );
+    toggleBtn = screen.getByLabelText(/toggle today's ingredients, 1\/4 ready/i);
+    expect(toggleBtn).toBeTruthy();
+  });
 });
+

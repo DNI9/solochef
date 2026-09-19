@@ -55,33 +55,26 @@ export default function DailyIngredients({
   return (
     <motion.div 
       layout
-      role="button"
-      tabIndex={0}
-      aria-expanded={isOpen}
-      aria-label="Toggle today's ingredients"
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          setIsOpen(prev => !prev);
-        }
-      }}
-      onClick={() => setIsOpen(prev => !prev)}
-      animate={{ scale: isOpen ? 1.01 : 1 }}
-      whileTap={{ scale: 0.98 }}
-      transition={{ type: "spring", stiffness: 400, damping: 25 }}
-      className="relative w-full rounded-[1.5rem] cursor-pointer overflow-hidden border-2 bg-amber-50/80 border-amber-200/90 shadow-xs select-none mb-4"
+      transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
+      className="relative w-full rounded-[1.5rem] overflow-hidden border-2 bg-amber-50/80 border-amber-200/90 shadow-xs mb-4"
     >
       {/* Top Header matching MealCard layout */}
-      <div className="p-4 flex items-stretch justify-between">
+      <button
+        type="button"
+        aria-expanded={isOpen}
+        aria-label={`Toggle today's ingredients, ${countBadgeText}`}
+        onClick={() => setIsOpen(prev => !prev)}
+        className="w-full text-left p-4 flex items-stretch justify-between cursor-pointer select-none focus-visible:outline-2 focus-visible:outline-orange-500 focus-visible:outline-offset-2"
+      >
         <div className="flex items-center gap-3.5 w-[75%]">
-          <div className="w-12 h-12 bg-white/80 backdrop-blur-xs rounded-2xl flex items-center justify-center text-2xl shadow-xs shrink-0">
+          <div className="w-12 h-12 bg-white/80 backdrop-blur-xs rounded-lg flex items-center justify-center text-2xl shadow-xs shrink-0">
             🥕
           </div>
           <div className="flex flex-col justify-center">
-            <p className="text-[10px] font-extrabold uppercase tracking-widest opacity-60 mb-0.5 text-amber-900">
+            <p className="text-[11px] font-extrabold uppercase tracking-widest opacity-60 mb-0.5 text-amber-900">
               Daily Pantry
             </p>
-            <h3 className="font-bold text-[15px] leading-snug text-amber-950">
+            <h3 className="font-bold text-[15px] leading-snug text-balance text-amber-950">
               Today&apos;s Ingredients
             </h3>
           </div>
@@ -89,7 +82,7 @@ export default function DailyIngredients({
 
         <div className="flex flex-col items-end justify-between py-0.5 shrink-0">
           <span 
-            className={`text-[10px] font-bold tabular-nums backdrop-blur-xs px-2 py-0.5 rounded-lg flex items-center gap-1 shadow-xs mb-2 transition-colors ${
+            className={`text-[11px] font-bold tabular-nums backdrop-blur-xs px-2 py-0.5 rounded-lg flex items-center gap-1 shadow-xs mb-2 transition-colors ${
               checkedCount === totalCount && totalCount > 0
                 ? 'bg-green-100 text-green-800'
                 : checkedCount > 0
@@ -106,7 +99,7 @@ export default function DailyIngredients({
             <ChevronDown size={14} strokeWidth={3} />
           </motion.div>
         </div>
-      </div>
+      </button>
 
       {/* Expand/Collapse Section with framer-motion matching MealCard */}
       <AnimatePresence>
@@ -127,11 +120,12 @@ export default function DailyIngredients({
                       <button
                         key={meal}
                         type="button"
+                        aria-pressed={isActive}
                         onClick={(e) => {
                           e.stopPropagation();
                           setSelectedFilter(meal);
                         }}
-                        className={`min-h-[36px] px-3 py-1 rounded-lg text-xs font-semibold shrink-0 transition-all cursor-pointer select-none ${
+                        className={`min-h-[44px] px-3.5 py-2 rounded-xl text-xs font-semibold shrink-0 transition-all cursor-pointer select-none focus-visible:outline-2 focus-visible:outline-orange-500 ${
                           isActive
                             ? 'bg-zinc-900 text-white shadow-xs'
                             : 'bg-white/80 text-zinc-700 hover:bg-white'
@@ -145,7 +139,7 @@ export default function DailyIngredients({
               )}
 
               {/* Checklist Box */}
-              <div className="bg-white/70 backdrop-blur-xs rounded-2xl p-2.5 border border-white/90 shadow-2xs">
+              <div className="bg-white/90 backdrop-blur-xs rounded-xl p-2.5 border border-white/90 shadow-2xs">
                 <ul className="space-y-1 select-text">
                   {filteredIngredients.map((item) => {
                     const fullKey = `${dayName}-${item.id}`;
@@ -161,13 +155,13 @@ export default function DailyIngredients({
                             e.stopPropagation();
                             onToggleItem(fullKey);
                           }}
-                          className="min-h-[44px] w-full flex items-center justify-between text-left p-2 rounded-xl transition-all hover:bg-white active:scale-[0.99] cursor-pointer select-none group"
+                          className="min-h-[44px] w-full flex items-center justify-between text-left p-2 rounded-xl transition-all hover:bg-white active:scale-[0.99] cursor-pointer select-none group focus-visible:outline-2 focus-visible:outline-orange-500"
                         >
                           <div className="flex items-center gap-3 min-w-0 pr-2">
                             <div
                               className={`w-5 h-5 rounded-md flex items-center justify-center border-2 shrink-0 transition-colors ${
                                 isChecked
-                                  ? 'bg-orange-500 border-orange-500 text-white'
+                                  ? 'bg-orange-600 border-orange-600 text-white'
                                   : 'border-zinc-300 bg-white group-hover:border-zinc-400'
                               }`}
                             >
