@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Copy, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
+import { Copy, CheckCircle2, AlertCircle, Sparkles, Wand2 } from 'lucide-react';
 import { SCHEMA_TEMPLATE, LLM_INSTRUCTION, validateMealPlan } from '@/utils/schema';
 import { MealPlanData } from '@/data/meals';
+import { PRESETS, PresetMeta } from '@/data/presets';
 
 interface ImportTabProps {
   onImport: (newPlan: MealPlanData) => void;
@@ -12,9 +13,10 @@ export default function ImportTab({ onImport }: ImportTabProps) {
   const [error, setError] = useState<string | null>(null);
   const [copiedType, setCopiedType] = useState<'schema' | 'prompt' | null>(null);
   const [success, setSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('Plan imported successfully!');
   
-  const copyTimeoutRef = useRef<NodeJS.Timeout>(null);
-  const successTimeoutRef = useRef<NodeJS.Timeout>(null);
+  const copyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const successTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   useEffect(() => {
     return () => {
@@ -55,6 +57,7 @@ export default function ImportTab({ onImport }: ImportTabProps) {
     try {
       const parsedPlan = validateMealPlan(jsonInput);
       onImport(parsedPlan);
+      setSuccessMessage('Plan imported successfully!');
       setSuccess(true);
       setJsonInput('');
       if (successTimeoutRef.current) clearTimeout(successTimeoutRef.current);
@@ -64,11 +67,75 @@ export default function ImportTab({ onImport }: ImportTabProps) {
     }
   };
 
+  const handleLoadPreset = (preset: PresetMeta) => {
+    setError(null);
+    onImport(preset.data);
+    setSuccessMessage(`Loaded "${preset.title}" preset!`);
+    setSuccess(true);
+    if (successTimeoutRef.current) clearTimeout(successTimeoutRef.current);
+    successTimeoutRef.current = setTimeout(() => setSuccess(false), 3500);
+  };
+
   return (
     <main className="flex-1 overflow-y-auto px-5 py-5 pb-28 bg-zinc-50 native-scroll no-scrollbar hide-scrollbar">
       <h2 className="text-xl font-black mb-5 flex items-center gap-2 text-zinc-900">
         🔄 Import Plan
       </h2>
+
+      {success && (
+        <div className="mb-5 bg-green-50 text-green-700 p-3.5 rounded-2xl flex items-center gap-2.5 text-sm border border-green-200/80 shadow-xs">
+          <CheckCircle2 size={18} className="shrink-0 text-green-600" />
+          <span className="font-semibold">{successMessage}</span>
+        </div>
+      )}
+
+      {/* Curated Presets Section */}
+      <div className="bg-white p-5 rounded-2xl shadow-xs border border-zinc-100 mb-5">
+        <div className="flex items-center justify-between mb-1.5">
+          <h3 className="font-bold text-zinc-900 flex items-center gap-1.5">
+            <Wand2 size={16} className="text-orange-500" />
+            <span>Curated Starter Presets</span>
+          </h3>
+          <span className="text-[11px] font-semibold text-orange-700 bg-orange-100/80 px-2 py-0.5 rounded-full">
+            1-Click Load
+          </span>
+        </div>
+        <p className="text-xs text-zinc-500 mb-4 leading-relaxed">
+          Skip prompt writing. Choose a pre-built, nutritionist-vetted 7-day plan ready for immediate cooking.
+        </p>
+
+        <div className="space-y-3">
+          {PRESETS.map((preset) => (
+            <div 
+              key={preset.id}
+              className="p-3.5 rounded-xl border border-zinc-100 bg-zinc-50/70 hover:bg-zinc-50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+            >
+              <div className="flex items-start gap-2.5">
+                <span className="text-2xl shrink-0 mt-0.5">{preset.emoji}</span>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h4 className="text-sm font-bold text-zinc-900">{preset.title}</h4>
+                    <span className="text-[10px] font-medium bg-zinc-200/70 text-zinc-700 px-1.5 py-0.5 rounded-md">
+                      {preset.tag}
+                    </span>
+                  </div>
+                  <p className="text-xs text-zinc-500 mt-0.5 leading-snug">
+                    {preset.description}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleLoadPreset(preset)}
+                aria-label={`Load ${preset.title}`}
+                className="min-h-[44px] min-w-[110px] shrink-0 bg-orange-500 hover:bg-orange-600 active:scale-95 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer select-none"
+              >
+                <span>Load Preset</span>
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
       
       <div className="bg-white p-5 rounded-2xl shadow-xs border border-zinc-100 mb-5 select-text">
         <h3 className="font-bold text-zinc-900 mb-2">1. Get Schema &amp; Instructions</h3>
@@ -124,13 +191,6 @@ export default function ImportTab({ onImport }: ImportTabProps) {
           <div className="mb-4 bg-red-50 text-red-600 p-3 rounded-xl flex items-start gap-2 text-sm border border-red-100">
             <AlertCircle size={16} className="mt-0.5 shrink-0" />
             <span>{error}</span>
-          </div>
-        )}
-
-        {success && (
-          <div className="mb-4 bg-green-50 text-green-700 p-3 rounded-xl flex items-center gap-2 text-sm border border-green-100">
-            <CheckCircle2 size={16} className="shrink-0" />
-            <span className="font-medium">Plan imported successfully!</span>
           </div>
         )}
 

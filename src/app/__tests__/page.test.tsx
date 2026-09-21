@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import Page from '../page';
 
 describe('Page', () => {
@@ -10,14 +10,36 @@ describe('Page', () => {
     expect(screen.getByText('Groceries')).toBeTruthy();
   });
 
-  it('shows empty state when no plan is loaded', () => {
+  it('shows empty state with curated starter presets when no plan is loaded', () => {
     render(<Page />);
-    // Initial tab is plan
-    expect(screen.getByText('No meal plan found')).toBeTruthy();
+    // Initial tab is plan - shows curated starter presets
+    expect(screen.getByText('Pick Your Starter Dabba')).toBeTruthy();
+    expect(screen.getByText('Anti-Slump High Energy')).toBeTruthy();
+    expect(screen.getByText('Solo Vegetarian Express')).toBeTruthy();
+    expect(screen.getByText('One-Pan Minimal Cleanup')).toBeTruthy();
+    expect(screen.getByText('Global Solo Classics')).toBeTruthy();
     
     // Click groceries
     fireEvent.click(screen.getByText('Groceries'));
     expect(screen.getByText('Empty Cart')).toBeTruthy();
+  });
+
+  it('loads curated preset directly from empty state and transitions to plan view', () => {
+    const setItemSpy = vi.spyOn(Storage.prototype, 'setItem');
+    render(<Page />);
+
+    // Click load preset on Anti-Slump High Energy
+    const loadPresetBtn = screen.getByRole('button', { name: /load anti-slump high energy/i });
+    fireEvent.click(loadPresetBtn);
+
+    // Should switch out of empty state and show Monday's plan
+    expect(screen.getByText('MON')).toBeTruthy();
+    expect(screen.getByText('3-Egg Veggie Bhurji')).toBeTruthy();
+    expect(screen.queryByText('Pick Your Starter Dabba')).toBeNull();
+
+    // Verifies localStorage persistence
+    expect(setItemSpy).toHaveBeenCalledWith('solochef_meal_plan', expect.stringContaining('3-Egg Veggie Bhurji'));
+    setItemSpy.mockRestore();
   });
 
   it('switches to import tab and shows copy button', () => {

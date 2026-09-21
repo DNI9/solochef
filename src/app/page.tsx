@@ -6,9 +6,10 @@ import DayPill from '@/components/DayPill';
 import MealCard from '@/components/MealCard';
 import ImportTab from '@/components/ImportTab';
 import DailyIngredients from '@/components/DailyIngredients';
-import { Calendar, ShoppingCart, Bell, Check, FileJson } from 'lucide-react';
+import { Calendar, ShoppingCart, Bell, Check, FileJson, Sparkles, Wand2 } from 'lucide-react';
 import { LayoutGroup } from 'framer-motion';
 import { validateMealPlan } from '@/utils/schema';
+import { PRESETS } from '@/data/presets';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as const;
 
@@ -41,7 +42,10 @@ export default function BentoMealPlanner() {
     const savedDaily = localStorage.getItem('solochef_daily_checked_items');
     if (savedDaily) {
       try {
-        setDailyCheckedItems(JSON.parse(savedDaily));
+        const parsed = JSON.parse(savedDaily);
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+          setDailyCheckedItems(parsed);
+        }
       } catch (e: unknown) {
         console.error("Failed to load daily checked items", e instanceof Error ? e.message : e);
       }
@@ -51,7 +55,10 @@ export default function BentoMealPlanner() {
     const savedGrocery = localStorage.getItem('solochef_grocery_checked_items');
     if (savedGrocery) {
       try {
-        setCheckedItems(JSON.parse(savedGrocery));
+        const parsed = JSON.parse(savedGrocery);
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+          setCheckedItems(parsed);
+        }
       } catch (e: unknown) {
         console.error("Failed to load grocery checked items", e instanceof Error ? e.message : e);
       }
@@ -60,33 +67,29 @@ export default function BentoMealPlanner() {
 
   const toggleGroceryItem = (category: string, itemIndex: number) => {
     const key = `${category}-${itemIndex}`;
-    setCheckedItems(prev => {
-      const updated = {
-        ...prev,
-        [key]: !prev[key]
-      };
-      try {
-        localStorage.setItem('solochef_grocery_checked_items', JSON.stringify(updated));
-      } catch (e) {
-        console.error("Failed to save grocery checked items", e);
-      }
-      return updated;
-    });
+    const updated = {
+      ...checkedItems,
+      [key]: !checkedItems[key]
+    };
+    setCheckedItems(updated);
+    try {
+      localStorage.setItem('solochef_grocery_checked_items', JSON.stringify(updated));
+    } catch (e) {
+      console.error("Failed to save grocery checked items", e);
+    }
   };
 
   const toggleDailyIngredientItem = (key: string) => {
-    setDailyCheckedItems(prev => {
-      const updated = {
-        ...prev,
-        [key]: !prev[key]
-      };
-      try {
-        localStorage.setItem('solochef_daily_checked_items', JSON.stringify(updated));
-      } catch (e) {
-        console.error("Failed to save daily checked items", e);
-      }
-      return updated;
-    });
+    const updated = {
+      ...dailyCheckedItems,
+      [key]: !dailyCheckedItems[key]
+    };
+    setDailyCheckedItems(updated);
+    try {
+      localStorage.setItem('solochef_daily_checked_items', JSON.stringify(updated));
+    } catch (e) {
+      console.error("Failed to save daily checked items", e);
+    }
   };
 
   const currentDayName = DAYS[currentDayIndex];
@@ -177,21 +180,85 @@ export default function BentoMealPlanner() {
                 </main>
               </>
             ) : (
-              <main className="flex-1 flex flex-col items-center justify-center px-6 py-12 text-center pb-28 native-scroll no-scrollbar hide-scrollbar overscroll-contain">
-                <div className="w-20 h-20 bg-orange-50 border border-orange-100 rounded-full flex items-center justify-center mb-6 shadow-xs">
-                  <Calendar size={32} className="text-orange-500" />
+              <main className="flex-1 overflow-y-auto px-5 py-6 pb-28 native-scroll no-scrollbar hide-scrollbar overscroll-contain">
+                {/* Header Welcome */}
+                <div className="text-center mb-5">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-100/80 text-orange-900 text-[11px] font-bold uppercase tracking-wider mb-2">
+                    <Sparkles size={13} className="text-orange-600 shrink-0" />
+                    <span>Quick-Start Presets</span>
+                  </div>
+                  <h2 className="text-xl font-black text-zinc-900 tracking-tight mb-1">
+                    Pick Your Starter Dabba
+                  </h2>
+                  <p className="text-xs text-zinc-500 max-w-[280px] mx-auto leading-relaxed">
+                    Zero energy crashes. 15-minute solo meals. 1-click loading with zero network delay.
+                  </p>
                 </div>
-                <h2 className="text-xl font-bold text-zinc-900 mb-2">No meal plan found</h2>
-                <p className="text-zinc-500 mb-8 max-w-[260px] text-sm leading-relaxed">
-                  You haven&apos;t loaded a meal plan yet. Head over to the Import tab to load your custom JSON plan.
-                </p>
-                <button 
-                  onClick={() => setActiveTab('import')}
-                  className="min-h-[44px] min-w-[44px] bg-zinc-900 hover:bg-zinc-800 active:scale-95 text-white px-6 py-3 rounded-2xl font-bold text-sm shadow-md transition-all flex items-center gap-2 cursor-pointer"
-                >
-                  <FileJson size={18} />
-                  <span>Go to Import Tab</span>
-                </button>
+
+                {/* Presets List */}
+                <div className="space-y-3.5 mb-6">
+                  {PRESETS.map((preset) => (
+                    <div
+                      key={preset.id}
+                      className="bg-white p-4 rounded-2xl border border-zinc-200/80 shadow-xs hover:border-orange-300 transition-all flex flex-col gap-3"
+                    >
+                      <div className="flex items-start gap-3">
+                        <span className="text-2xl p-2 bg-zinc-50 border border-zinc-100 rounded-xl shrink-0">
+                          {preset.emoji}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                            <h3 className="font-bold text-sm text-zinc-900 leading-tight">
+                              {preset.title}
+                            </h3>
+                            <span className="text-[10px] font-semibold text-orange-800 bg-orange-50 border border-orange-200/60 px-1.5 py-0.5 rounded-md">
+                              {preset.prepTime}
+                            </span>
+                          </div>
+                          <p className="text-xs text-zinc-500 leading-relaxed">
+                            {preset.description}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Highlights */}
+                      <div className="flex items-center gap-1.5 flex-wrap pt-2 border-t border-zinc-100">
+                        {preset.highlights.map((h, i) => (
+                          <span key={i} className="text-[10px] font-medium text-zinc-600 bg-zinc-100 px-2 py-0.5 rounded-md flex items-center gap-1">
+                            <span className="w-1 h-1 rounded-full bg-orange-500 shrink-0"></span>
+                            <span>{h}</span>
+                          </span>
+                        ))}
+                      </div>
+
+                      {/* 1-Click Load Action Button */}
+                      <button
+                        type="button"
+                        onClick={() => handleImportPlan(preset.data)}
+                        aria-label={`Load ${preset.title}`}
+                        className="min-h-[44px] w-full bg-zinc-900 hover:bg-orange-600 active:scale-[0.98] text-white font-bold text-xs py-2.5 px-4 rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer select-none"
+                      >
+                        <Wand2 size={15} />
+                        <span>Load This Dabba</span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Secondary Option: Import Custom JSON */}
+                <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200/70 text-center flex flex-col items-center gap-2">
+                  <p className="text-xs text-zinc-500 font-medium">
+                    Have your own AI-generated meal plan?
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('import')}
+                    className="min-h-[44px] px-4 py-2 text-xs font-bold text-zinc-700 hover:text-zinc-900 hover:bg-zinc-100 active:scale-95 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <FileJson size={16} />
+                    <span>Import custom JSON from ChatGPT/Claude</span>
+                  </button>
+                </div>
               </main>
             )}
           </>

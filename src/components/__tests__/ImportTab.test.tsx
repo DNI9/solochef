@@ -105,4 +105,28 @@ describe('ImportTab', () => {
 
     expect(screen.getByText(/Unexpected end of JSON/i)).toBeTruthy();
   });
+
+  it('renders curated starter presets section with all 4 preset options', () => {
+    render(<ImportTab onImport={() => {}} />);
+    
+    expect(screen.getByText('Curated Starter Presets')).toBeTruthy();
+    expect(screen.getByText('Anti-Slump High Energy')).toBeTruthy();
+    expect(screen.getByText('Solo Vegetarian Express')).toBeTruthy();
+    expect(screen.getByText('One-Pan Minimal Cleanup')).toBeTruthy();
+    expect(screen.getByText('Global Solo Classics')).toBeTruthy();
+  });
+
+  it('loads curated preset when clicking Load Preset button', () => {
+    const onImportMock = vi.fn();
+    render(<ImportTab onImport={onImportMock} />);
+
+    const loadAntiSlumpBtn = screen.getByRole('button', { name: /load anti-slump high energy/i });
+    fireEvent.click(loadAntiSlumpBtn);
+
+    expect(onImportMock).toHaveBeenCalledTimes(1);
+    const loadedData = onImportMock.mock.calls[0][0];
+    expect(loadedData.Monday).toBeDefined();
+    expect(loadedData.Monday.meals[0].title).toBe('3-Egg Veggie Bhurji');
+    expect(screen.getByText(/Loaded "Anti-Slump High Energy" preset!/i)).toBeTruthy();
+  });
 });
