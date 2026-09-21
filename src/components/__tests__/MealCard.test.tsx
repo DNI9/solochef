@@ -178,5 +178,16 @@ describe('MealCard', () => {
     expect(ytButton.className).not.toContain('bg-red-600');
     expect(ytButton.getAttribute('aria-label')).toBeTruthy();
   });
+
+  it('renders "Start Cooking" button when open and triggers onStartCooking', () => {
+    const handleStartCooking = vi.fn();
+    render(<MealCard mealName="Breakfast" data={mockData} isOpen={true} onClick={() => {}} onStartCooking={handleStartCooking} />);
+    
+    const startBtn = screen.getByRole('button', { name: /start cooking/i });
+    expect(startBtn).toBeTruthy();
+    
+    fireEvent.click(startBtn);
+    expect(handleStartCooking).toHaveBeenCalledTimes(1);
+  });
 });
 
