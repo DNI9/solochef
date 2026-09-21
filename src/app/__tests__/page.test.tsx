@@ -33,7 +33,9 @@ describe('Page', () => {
     fireEvent.click(loadPresetBtn);
 
     // Should switch out of empty state and show Monday's plan
-    expect(screen.getByText('MON')).toBeTruthy();
+    const monTab = screen.getByRole('button', { name: 'MON' });
+    fireEvent.click(monTab);
+    expect(monTab).toBeTruthy();
     expect(screen.getByText('3-Egg Veggie Bhurji')).toBeTruthy();
     expect(screen.queryByText('Pick Your Starter Dabba')).toBeNull();
 

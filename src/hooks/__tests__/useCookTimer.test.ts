@@ -21,7 +21,7 @@ describe('useCookTimer', () => {
       }),
       destination: {},
       currentTime: 0,
-    })) as any;
+    })) as unknown as typeof AudioContext;
 
     // Mock navigator.vibrate
     if (!navigator.vibrate) {

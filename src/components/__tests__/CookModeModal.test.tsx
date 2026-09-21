@@ -10,7 +10,7 @@ vi.mock('../../hooks/useCookTimer', () => ({
     start: vi.fn(),
     pause: vi.fn(),
     stop: vi.fn(),
-    formatTime: (sec: number) => `01:00`
+    formatTime: () => `01:00`
   }))
 }));
 
@@ -30,8 +30,8 @@ describe('CookModeModal', () => {
     ingredients: []
   };
 
-  let wakeLockRequestMock: any;
-  let releaseMock: any;
+  let wakeLockRequestMock: ReturnType<typeof vi.fn>;
+  let releaseMock: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     releaseMock = vi.fn().mockResolvedValue(undefined);
@@ -53,19 +53,19 @@ describe('CookModeModal', () => {
   });
 
   it('requests Wake Lock on mount and releases on unmount', async () => {
-    const { unmount } = render(<CookModeModal meal={mockMeal as any} onClose={() => {}} />);
+    const { unmount } = render(<CookModeModal meal={mockMeal} onClose={() => {}} />);
     
     expect(wakeLockRequestMock).toHaveBeenCalledWith('screen');
     
     unmount();
     
-    // Check if release was called (might be async, but we can check if it's planned or bound)
-    // Using a timeout or just expecting the function to be called if implemented synchronously in useEffect cleanup
-    expect(releaseMock).toHaveBeenCalled();
+    await vi.waitFor(() => {
+      expect(releaseMock).toHaveBeenCalled();
+    });
   });
 
   it('re-requests Wake Lock on visibility change to visible', () => {
-    render(<CookModeModal meal={mockMeal as any} onClose={() => {}} />);
+    render(<CookModeModal meal={mockMeal} onClose={() => {}} />);
     
     expect(wakeLockRequestMock).toHaveBeenCalledTimes(1);
     
@@ -77,7 +77,7 @@ describe('CookModeModal', () => {
   });
 
   it('renders steps and timer for steps with duration', () => {
-    render(<CookModeModal meal={mockMeal as any} onClose={() => {}} />);
+    render(<CookModeModal meal={mockMeal} onClose={() => {}} />);
     
     expect(screen.getByText('Chop veggies.')).toBeTruthy();
     expect(screen.getByText('Cook for 1 minute.')).toBeTruthy();
@@ -89,7 +89,7 @@ describe('CookModeModal', () => {
 
   it('calls onClose when close button is clicked', () => {
     const handleClose = vi.fn();
-    render(<CookModeModal meal={mockMeal as any} onClose={handleClose} />);
+    render(<CookModeModal meal={mockMeal} onClose={handleClose} />);
     
     const closeBtn = screen.getByRole('button', { name: /close/i });
     fireEvent.click(closeBtn);

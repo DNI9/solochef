@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, Clock } from 'lucide-react';
 import AskGeminiButton from './AskGeminiButton';
+import { CookModeModal } from './CookModeModal';
+import { resumeAudioContext } from '../utils/audio';
 
 interface MealCardProps {
   mealName: string;
@@ -20,7 +22,9 @@ interface MealCardProps {
   };
   isOpen: boolean;
   onClick: () => void;
+  onStartCooking?: (e: React.MouseEvent) => void;
 }
+
 
 export function normalizeRecipeSteps(recipe: string[] | string): string[] {
   if (Array.isArray(recipe)) {
@@ -45,8 +49,20 @@ export function cleanStepText(step: string): string {
   return cleaned || step;
 }
 
-export default function MealCard({ mealName, data, isOpen, onClick }: MealCardProps) {
+export default function MealCard({ mealName, data, isOpen, onClick, onStartCooking }: MealCardProps) {
   const steps = useMemo(() => normalizeRecipeSteps(data.recipe), [data.recipe]);
+  const [isCookModeOpen, setIsCookModeOpen] = useState(false);
+
+  const handleStartCooking = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    resumeAudioContext();
+    
+    if (onStartCooking) {
+      onStartCooking(e);
+    }
+    setIsCookModeOpen(true);
+  };
+
 
   return (
     <motion.div 
@@ -140,6 +156,16 @@ export default function MealCard({ mealName, data, isOpen, onClick }: MealCardPr
               )}
 
               <div className="flex flex-col gap-2.5">
+                <button
+                  type="button"
+                  aria-label={`Start cooking ${data.title}`}
+                  onClick={handleStartCooking}
+                  className="min-h-[44px] w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 active:scale-[0.98] text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-xs transition-all cursor-pointer select-none"
+                >
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                  <span>Start Cooking</span>
+                </button>
+
                 <AskGeminiButton
                   meal={{
                     title: data.title,
@@ -174,6 +200,10 @@ export default function MealCard({ mealName, data, isOpen, onClick }: MealCardPr
           </motion.div>
         )}
       </AnimatePresence>
+
+      {isCookModeOpen && (
+        <CookModeModal meal={data} onClose={() => setIsCookModeOpen(false)} />
+      )}
     </motion.div>
   );
 }
