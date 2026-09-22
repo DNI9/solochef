@@ -77,4 +77,17 @@ describe('AskGeminiButton Component', () => {
 
     expect(screen.getByText(/tip: long press text above for android 'ask gemini' menu/i)).toBeTruthy();
   });
+
+  it('renders secondary action children alongside Gemini button in 2-column grid', () => {
+    const { container } = render(
+      <AskGeminiButton meal={mockMeal}>
+        <button type="button">Secondary Action</button>
+      </AskGeminiButton>
+    );
+
+    const grid = container.querySelector('.grid.grid-cols-2');
+    expect(grid).toBeTruthy();
+    expect(screen.getByText('Secondary Action')).toBeTruthy();
+  });
 });
+

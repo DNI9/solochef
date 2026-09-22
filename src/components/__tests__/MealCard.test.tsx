@@ -189,5 +189,30 @@ describe('MealCard', () => {
     fireEvent.click(startBtn);
     expect(handleStartCooking).toHaveBeenCalledTimes(1);
   });
+
+  it('renders Start Cooking button with prominent min-h-[48px] touch target for mobile kitchen ergonomics', () => {
+    render(<MealCard mealName="Breakfast" data={mockData} isOpen={true} onClick={() => {}} />);
+    const startBtn = screen.getByRole('button', { name: /start cooking/i });
+    expect(startBtn.className).toContain('min-h-[48px]');
+  });
+
+  it('renders secondary actions (Ask Gemini and YouTube) side-by-side in a 2-column grid', () => {
+    const { container } = render(<MealCard mealName="Breakfast" data={mockData} isOpen={true} onClick={() => {}} />);
+    const secondaryGrid = container.querySelector('.grid.grid-cols-2');
+    expect(secondaryGrid).toBeTruthy();
+    
+    // Check that both Gemini button and YouTube link are descendants of the 2-column grid
+    const geminiBtn = screen.getByRole('button', { name: /ask gemini/i });
+    const ytLink = screen.getByRole('link', { name: /youtube/i });
+    expect(secondaryGrid?.contains(geminiBtn)).toBe(true);
+    expect(secondaryGrid?.contains(ytLink)).toBe(true);
+  });
+
+  it('YouTube link includes "(opens in new tab)" in accessible label for WCAG AA compliance', () => {
+    render(<MealCard mealName="Breakfast" data={mockData} isOpen={true} onClick={() => {}} />);
+    const ytButton = screen.getByRole('link', { name: /youtube/i });
+    expect(ytButton.getAttribute('aria-label')).toMatch(/opens in new tab/i);
+  });
 });
+
 
