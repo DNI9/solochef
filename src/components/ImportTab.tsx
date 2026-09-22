@@ -479,20 +479,25 @@ export default function ImportTab({ onImport, currentPlan }: ImportTabProps) {
               Archive your current week into local storage so you can easily rotate between your favorite plans without managing files.
             </p>
 
-            <div className="flex items-center gap-2 mb-3">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mb-3">
+              <label htmlFor="vault-plan-name" className="sr-only">
+                New plan name for vault
+              </label>
               <input
+                id="vault-plan-name"
                 type="text"
                 aria-label="New plan name for vault"
                 value={newVaultName}
                 onChange={(e) => setNewVaultName(e.target.value)}
                 placeholder="Plan name (e.g. Energy Boost Week)"
-                className="flex-1 min-h-[44px] px-3.5 rounded-xl border border-zinc-200 bg-zinc-50 text-xs font-semibold text-zinc-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="flex-1 min-w-0 min-h-[44px] px-3.5 rounded-xl border border-zinc-200 bg-zinc-50 text-xs font-semibold text-zinc-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
               <button
                 type="button"
                 onClick={handleSaveToVault}
-                className="min-h-[44px] bg-orange-500 hover:bg-orange-600 active:scale-95 text-white text-xs font-bold px-4 rounded-xl transition-all shadow-xs flex items-center justify-center cursor-pointer select-none shrink-0"
+                className="min-h-[44px] w-full sm:w-auto bg-orange-500 hover:bg-orange-600 active:scale-95 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer select-none shrink-0"
               >
+                <Archive size={14} />
                 <span>Save Current Plan</span>
               </button>
             </div>
