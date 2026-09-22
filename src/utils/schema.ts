@@ -118,8 +118,18 @@ ${SCHEMA_TEMPLATE}`;
 
 export function validateMealPlan(jsonString: string): MealPlanData {
   try {
-    const data = JSON.parse(jsonString);
+    let data = JSON.parse(jsonString);
     if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error("Root must be a JSON object");
+
+    if ('version' in data) {
+      if (data.version !== 1) {
+        throw new Error(`Unsupported export version: ${data.version}`);
+      }
+      if (!data.plan || typeof data.plan !== 'object' || Array.isArray(data.plan)) {
+        throw new Error('Missing or invalid plan object inside export envelope');
+      }
+      data = data.plan;
+    }
 
     const sanitizedPlan: MealPlanData = {};
 

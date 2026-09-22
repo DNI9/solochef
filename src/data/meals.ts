@@ -1,6 +1,14 @@
 import { RecipeStep, RecipeInput } from '../types/cookMode';
+import type { ExportEnvelope } from '../utils/planExport';
 
-export type { RecipeStep, RecipeInput };
+export type { RecipeStep, RecipeInput, ExportEnvelope };
+
+export interface SavedPlanItem {
+  id: string;
+  name: string;
+  savedAt: string;
+  plan: MealPlanData;
+}
 
 export interface MealData {
   name: string;

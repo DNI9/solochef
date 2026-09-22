@@ -393,6 +393,49 @@ describe('validateMealPlan', () => {
     expect(() => validateMealPlan(invalidJson)).toThrow('Missing or invalid meals array for Monday');
   });
 
+  it('should unwrap and validate ExportEnvelope format', () => {
+    const validJson = JSON.stringify({
+      version: 1,
+      app: 'solochef',
+      exportedAt: '2026-09-22T00:00:00Z',
+      plan: {
+        Monday: { prepAlert: null, meals: [] },
+        Tuesday: { prepAlert: null, meals: [] },
+        Wednesday: { prepAlert: null, meals: [] },
+        Thursday: { prepAlert: null, meals: [] },
+        Friday: { prepAlert: null, meals: [] },
+        Saturday: { prepAlert: null, meals: [] },
+        Sunday: { prepAlert: null, meals: [] }
+      }
+    });
+    
+    const parsed = validateMealPlan(validJson);
+    expect(parsed.Monday).toBeDefined();
+    expect(parsed.Monday?.meals).toEqual([]);
+  });
+
+  it('should throw if envelope has invalid version', () => {
+    const invalidJson = JSON.stringify({
+      version: 2,
+      app: 'solochef',
+      exportedAt: '2026-09-22T00:00:00Z',
+      plan: { Monday: {} }
+    });
+    
+    expect(() => validateMealPlan(invalidJson)).toThrow(/Unsupported export version/i);
+  });
+
+  it('should throw if inner plan inside envelope is malformed', () => {
+    const invalidJson = JSON.stringify({
+      version: 1,
+      app: 'solochef',
+      exportedAt: '2026-09-22T00:00:00Z',
+      plan: { Monday: {} }
+    });
+    
+    expect(() => validateMealPlan(invalidJson)).toThrow('Missing or invalid meals array for Monday');
+  });
+
   it('should throw on invalid JSON', () => {
     expect(() => validateMealPlan('{ invalid json }')).toThrow(/JSON/i);
   });

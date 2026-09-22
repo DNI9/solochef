@@ -6,7 +6,7 @@ import DayPill from '@/components/DayPill';
 import MealCard from '@/components/MealCard';
 import ImportTab from '@/components/ImportTab';
 import DailyIngredients from '@/components/DailyIngredients';
-import { Calendar, ShoppingCart, Bell, Check, FileJson, Sparkles, Wand2 } from 'lucide-react';
+import { Calendar, ShoppingCart, Bell, Check, FileJson, Sparkles, Wand2, FolderSync } from 'lucide-react';
 import { LayoutGroup } from 'framer-motion';
 import { validateMealPlan } from '@/utils/schema';
 import { PRESETS } from '@/data/presets';
@@ -67,29 +67,33 @@ export default function BentoMealPlanner() {
 
   const toggleGroceryItem = (category: string, itemIndex: number) => {
     const key = `${category}-${itemIndex}`;
-    const updated = {
-      ...checkedItems,
-      [key]: !checkedItems[key]
-    };
-    setCheckedItems(updated);
-    try {
-      localStorage.setItem('solochef_grocery_checked_items', JSON.stringify(updated));
-    } catch (e) {
-      console.error("Failed to save grocery checked items", e);
-    }
+    setCheckedItems((prev) => {
+      const updated = {
+        ...prev,
+        [key]: !prev[key]
+      };
+      try {
+        localStorage.setItem('solochef_grocery_checked_items', JSON.stringify(updated));
+      } catch (e) {
+        console.error("Failed to save grocery checked items", e);
+      }
+      return updated;
+    });
   };
 
   const toggleDailyIngredientItem = (key: string) => {
-    const updated = {
-      ...dailyCheckedItems,
-      [key]: !dailyCheckedItems[key]
-    };
-    setDailyCheckedItems(updated);
-    try {
-      localStorage.setItem('solochef_daily_checked_items', JSON.stringify(updated));
-    } catch (e) {
-      console.error("Failed to save daily checked items", e);
-    }
+    setDailyCheckedItems((prev) => {
+      const updated = {
+        ...prev,
+        [key]: !prev[key]
+      };
+      try {
+        localStorage.setItem('solochef_daily_checked_items', JSON.stringify(updated));
+      } catch (e) {
+        console.error("Failed to save daily checked items", e);
+      }
+      return updated;
+    });
   };
 
   const currentDayName = DAYS[currentDayIndex];
@@ -316,7 +320,7 @@ export default function BentoMealPlanner() {
         )}
         
         {activeTab === 'import' && (
-          <ImportTab onImport={handleImportPlan} />
+          <ImportTab onImport={handleImportPlan} currentPlan={mealDb} />
         )}
 
         {/* Native-style Frosted Glass Bottom Tab Bar */}
@@ -344,7 +348,7 @@ export default function BentoMealPlanner() {
             className={`min-h-[44px] min-w-[44px] px-4 py-1.5 flex flex-col items-center justify-center gap-1 rounded-2xl active:scale-90 transition-all duration-150 ${activeTab === 'import' ? 'bg-orange-50 text-orange-600 font-bold' : 'text-zinc-400 hover:text-zinc-600'}`}
             aria-label="Import"
           >
-            <FileJson size={22} strokeWidth={activeTab === 'import' ? 2.5 : 2} />
+            <FolderSync size={22} strokeWidth={activeTab === 'import' ? 2.5 : 2} />
             <span className="text-[10px] uppercase tracking-wider">Import</span>
           </button>
         </nav>
