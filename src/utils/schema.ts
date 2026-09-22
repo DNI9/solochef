@@ -1,4 +1,4 @@
-import { MealPlanData, GroceryCategory } from '../data/meals';
+import { MealPlanData, GroceryCategory, RecipeStep } from '../data/meals';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as const;
 
@@ -27,7 +27,7 @@ export const SCHEMA_TEMPLATE = `{
         "recipe": [
           "Step 1: Whisk 3 eggs with a pinch of turmeric, chili powder, and salt.",
           "Step 2: Heat 1 tsp oil in a skillet and sauté finely chopped onions and tomatoes for 2 mins.",
-          "Step 3: Pour eggs into the pan and scramble gently over medium-low heat until soft curds form.",
+          "Step 3: Pour eggs into the pan and scramble gently over medium-low heat for 2 mins until soft curds form.",
           "Step 4: Garnish with fresh coriander and serve immediately."
         ]
       },
@@ -75,9 +75,10 @@ export const SCHEMA_TEMPLATE = `{
         ],
         "recipe": [
           "Step 1: Pat salmon fillet dry and season both sides with salt and black pepper.",
-          "Step 2: Melt butter in a non-stick skillet over medium-high heat with minced garlic.",
-          "Step 3: Sear salmon skin-side down for 4 mins, flip and baste for 3 more mins.",
-          "Step 4: Drizzle with fresh lemon juice and serve with steamed broccoli."
+          "Step 2: Melt butter in a non-stick skillet over medium-high heat with minced garlic for 1 min.",
+          "Step 3: Sear salmon skin-side down for 4 mins.",
+          "Step 4: Flip and baste with garlic butter for 3 mins until cooked through.",
+          "Step 5: Drizzle with fresh lemon juice and serve with steamed broccoli."
         ]
       }
     ]
@@ -102,7 +103,9 @@ CRITICAL REQUIREMENTS:
 1. Days: Include all 7 days: "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday".
 2. Meals: For each day, include 3 meals ("Breakfast", "Lunch", "Dinner").
 3. Meal Ingredients: For EVERY meal, provide an "ingredients" array listing all quantified ingredients needed (e.g. ["3 large eggs", "1 onion (diced)", "1 tsp oil"]).
-4. Step-by-Step Recipes: The "recipe" field for EVERY meal MUST be an array of strings representing sequential, numbered step-by-step cooking instructions (e.g. ["Step 1: ...", "Step 2: ...", "Step 3: ..."]). Do NOT return a single text block.
+4. Step-by-Step Recipes: The "recipe" field for EVERY meal MUST be an array of sequential cooking steps.
+   - Each step must contain AT MOST ONE timed action with an explicit duration in minutes or seconds (e.g. "Sauté for 2 mins", "Simmer for 10 mins", "Rest for 5 mins").
+   - Split compound actions into separate steps so timers are precise and unambiguous.
 5. Meal Styling:
    - Breakfast: bg: "bg-orange-100", border: "border-orange-300", text: "text-orange-900"
    - Lunch: bg: "bg-green-100", border: "border-green-300", text: "text-green-900"
@@ -170,7 +173,7 @@ export function validateMealPlan(jsonString: string): MealPlanData {
           }
         }
 
-        let recipeSteps: string[] = [];
+        let recipeSteps: (RecipeStep | string)[] = [];
         if (Array.isArray(m.recipe)) {
           if (m.recipe.length === 0) {
             throw new Error(`Invalid recipe for ${day} ${m.name}: recipe steps array cannot be empty`);
@@ -180,13 +183,31 @@ export function validateMealPlan(jsonString: string): MealPlanData {
           }
           for (let s = 0; s < m.recipe.length; s++) {
             const step = m.recipe[s];
-            if (typeof step !== 'string' || !step.trim()) {
+            if (typeof step === 'string') {
+              if (!step.trim()) {
+                throw new Error(`Invalid recipe step at index ${s} for ${day} ${m.name}`);
+              }
+              if (step.length > 2000) {
+                throw new Error(`Recipe step at index ${s} too long for ${day} ${m.name} (max 2000 chars)`);
+              }
+              recipeSteps.push(step.trim());
+            } else if (typeof step === 'object' && step !== null && typeof step.text === 'string') {
+              if (!step.text.trim()) {
+                throw new Error(`Invalid recipe step at index ${s} for ${day} ${m.name}`);
+              }
+              if (step.text.length > 2000) {
+                throw new Error(`Recipe step at index ${s} too long for ${day} ${m.name} (max 2000 chars)`);
+              }
+              const sanitizedStep: RecipeStep = {
+                text: step.text.trim(),
+                ...(typeof step.timer === 'number' && step.timer >= 0 && step.timer <= 86400 ? { timer: step.timer } : {}),
+                ...(typeof step.timerLabel === 'string' && step.timerLabel.trim() ? { timerLabel: step.timerLabel.trim() } : {}),
+                ...(typeof step.prep === 'string' && step.prep.trim() ? { prep: step.prep.trim() } : {}),
+              };
+              recipeSteps.push(sanitizedStep);
+            } else {
               throw new Error(`Invalid recipe step at index ${s} for ${day} ${m.name}`);
             }
-            if (step.length > 2000) {
-              throw new Error(`Recipe step at index ${s} too long for ${day} ${m.name} (max 2000 chars)`);
-            }
-            recipeSteps.push(step.trim());
           }
         } else if (typeof m.recipe === 'string' && m.recipe.trim()) {
           if (m.recipe.length > 10000) {

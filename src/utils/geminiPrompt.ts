@@ -4,10 +4,12 @@
  * directly in Gemini with zero manual copying or pasting.
  */
 
+import { RecipeInput } from '../types/cookMode';
+
 export interface RecipePromptOptions {
   title: string;
   ingredients?: string[];
-  recipe?: string[] | string;
+  recipe?: RecipeInput;
 }
 
 /**
@@ -37,9 +39,18 @@ export function buildGeminiRecipePrompt({
   if (recipe) {
     const steps: string[] = [];
     if (Array.isArray(recipe)) {
-      for (const step of recipe) {
-        const trimmed = step.trim();
-        if (trimmed) steps.push(trimmed);
+      for (const s of recipe) {
+        if (typeof s === 'string') {
+          const trimmed = s.trim();
+          if (trimmed) steps.push(trimmed);
+        } else if (s && typeof s === 'object' && typeof s.text === 'string') {
+          const trimmed = s.text.trim();
+          if (trimmed) {
+            const timerStr = s.timer ? ` (${Math.round(s.timer / 60)} mins)` : '';
+            const prepStr = s.prep ? ` [Prep: ${s.prep}]` : '';
+            steps.push(`${trimmed}${timerStr}${prepStr}`);
+          }
+        }
       }
     } else if (typeof recipe === 'string') {
       const splitSteps = recipe.split(/\r?\n+/);

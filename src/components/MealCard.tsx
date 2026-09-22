@@ -6,6 +6,8 @@ import { ChevronDown, Clock } from 'lucide-react';
 import AskGeminiButton from './AskGeminiButton';
 import { CookModeModal } from './CookModeModal';
 import { resumeAudioContext } from '../utils/audio';
+import { normalizeRecipeSteps } from '../utils/recipeParser';
+import { RecipeInput } from '../types/cookMode';
 
 interface MealCardProps {
   mealName: string;
@@ -18,35 +20,11 @@ interface MealCardProps {
     border: string;
     text: string;
     ingredients?: string[];
-    recipe: string[] | string;
+    recipe: RecipeInput;
   };
   isOpen: boolean;
   onClick: () => void;
   onStartCooking?: (e: React.MouseEvent) => void;
-}
-
-
-export function normalizeRecipeSteps(recipe: string[] | string): string[] {
-  if (Array.isArray(recipe)) {
-    return recipe.map(s => s.trim()).filter(Boolean);
-  }
-  if (typeof recipe === 'string') {
-    const trimmed = recipe.trim();
-    if (!trimmed) return [];
-    if (trimmed.includes('\n')) {
-      return trimmed
-        .split(/\r?\n+/)
-        .map(s => s.trim())
-        .filter(Boolean);
-    }
-    return [trimmed];
-  }
-  return [];
-}
-
-export function cleanStepText(step: string): string {
-  const cleaned = step.replace(/^(?:step\s*\d+[:\-.]?\s*|\d+[\.\)]\s*)/i, '').trim();
-  return cleaned || step;
 }
 
 export default function MealCard({ mealName, data, isOpen, onClick, onStartCooking }: MealCardProps) {
@@ -147,7 +125,12 @@ export default function MealCard({ mealName, data, isOpen, onClick, onStartCooki
                           {idx + 1}
                         </span>
                         <span className={`${data.text} text-xs leading-relaxed font-medium flex-1 pt-0.5`}>
-                          {cleanStepText(step)}
+                          {step.text}
+                          {step.timer ? (
+                            <span className="ml-1.5 inline-flex items-center gap-0.5 text-[10px] font-bold text-orange-700 bg-orange-100/70 border border-orange-200 px-1.5 py-0.5 rounded-md">
+                              ⏱️ {Math.round(step.timer / 60)}m
+                            </span>
+                          ) : null}
                         </span>
                       </li>
                     ))}

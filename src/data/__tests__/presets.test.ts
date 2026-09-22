@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { PRESETS, PRESET_MAP } from '../presets';
 import { validateMealPlan } from '@/utils/schema';
+import { normalizeRecipeSteps } from '@/utils/recipeParser';
 import { MealPlanData } from '../meals';
 
 const REQUIRED_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as const;
@@ -88,6 +89,23 @@ describe('Curated Presets Data Engine', () => {
     expect(validated).toBeDefined();
     for (const day of REQUIRED_DAYS) {
       expect(validated[day]?.meals).toHaveLength(3);
+    }
+  });
+
+  it.each(PRESETS)('preset "$id" produces normalized RecipeStep items with valid text', (preset) => {
+    const data = preset.data as MealPlanData;
+    for (const day of REQUIRED_DAYS) {
+      const dayPlan = data[day];
+      dayPlan?.meals.forEach(meal => {
+        const steps = normalizeRecipeSteps(meal.recipe);
+        expect(steps.length).toBeGreaterThan(0);
+        steps.forEach((step, idx) => {
+          expect(step.text, `Meal "${meal.title}" step ${idx + 1} text must not be empty`).toBeTruthy();
+          if (step.timer !== undefined) {
+            expect(step.timer).toBeGreaterThan(0);
+          }
+        });
+      });
     }
   });
 });

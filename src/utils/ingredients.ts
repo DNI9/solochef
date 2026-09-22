@@ -1,4 +1,4 @@
-import { MealData } from '../data/meals';
+import { MealData, RecipeInput } from '../data/meals';
 
 export interface DailyIngredient {
   id: string;
@@ -10,12 +10,13 @@ export interface DailyIngredient {
  * Extracts candidate ingredient fragments from recipe step instructions
  * for legacy meal plans that do not have explicit ingredient lists.
  */
-export function extractFallbackIngredients(recipe: string[] | string): string[] {
-  const steps: string[] = Array.isArray(recipe)
-    ? recipe
-    : typeof recipe === 'string'
-      ? recipe.split(/\r?\n+/).filter(Boolean)
-      : [];
+export function extractFallbackIngredients(recipe: RecipeInput): string[] {
+  let steps: string[] = [];
+  if (Array.isArray(recipe)) {
+    steps = recipe.map(item => (typeof item === 'string' ? item : item.text));
+  } else if (typeof recipe === 'string') {
+    steps = recipe.split(/\r?\n+/).filter(Boolean);
+  }
 
   if (steps.length === 0) return [];
 
