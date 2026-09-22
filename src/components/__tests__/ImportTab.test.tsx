@@ -109,4 +109,28 @@ describe('ImportTab (Manage Plan Hub)', () => {
     const savedPlansRawAfterDelete = localStorage.getItem('solochef_saved_plans');
     expect(JSON.parse(savedPlansRawAfterDelete || '[]')).toHaveLength(0);
   });
+
+  it('validates and loads pasted json plan, displays confirmation modal, and shows success toast on confirm', async () => {
+    const onImportMock = vi.fn();
+    render(<ImportTab onImport={onImportMock} currentPlan={dummyPlan} />);
+    fireEvent.click(screen.getByRole('button', { name: /^import$/i }));
+
+    const textarea = screen.getByLabelText(/paste json meal plan here/i);
+    fireEvent.change(textarea, { target: { value: JSON.stringify(dummyPlan) } });
+
+    const validateBtn = screen.getByRole('button', { name: /validate & load pasted plan/i });
+    fireEvent.click(validateBtn);
+
+    // Confirmation modal should open
+    const replaceBtn = await screen.findByRole('button', { name: /replace plan/i });
+    expect(replaceBtn).toBeTruthy();
+
+    fireEvent.click(replaceBtn);
+
+    // Verify onImport was called
+    expect(onImportMock).toHaveBeenCalled();
+
+    // Verify success toast appears with plan statistics
+    expect(await screen.findByText(/plan imported successfully/i)).toBeTruthy();
+  });
 });

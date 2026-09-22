@@ -203,9 +203,11 @@ export default function ImportTab({ onImport, currentPlan }: ImportTabProps) {
   const handleConfirmImport = () => {
     if (!pendingPlan) return;
     onImport(pendingPlan);
+    const dayCount = pendingPlanMeta?.dayCount || 7;
+    const mealCount = pendingPlanMeta?.mealCount || 21;
     setPendingPlan(null);
     setPendingPlanMeta(null);
-    triggerSuccess('Plan imported successfully!');
+    triggerSuccess(`Plan imported successfully! ${dayCount} days, ${mealCount} meals loaded.`);
   };
 
   // 3. Vault Handlers
@@ -260,18 +262,36 @@ export default function ImportTab({ onImport, currentPlan }: ImportTabProps) {
         </span>
       </div>
 
-      {/* Status Alerts */}
-      {success && (
-        <div role="status" aria-live="polite" className="mb-4 bg-emerald-50 text-emerald-800 p-3.5 rounded-2xl flex items-center gap-2.5 text-xs font-semibold border border-emerald-200/80 shadow-xs">
-          <CheckCircle2 size={18} className="shrink-0 text-emerald-600" />
-          <span>{successMessage}</span>
-        </div>
-      )}
-
-      {error && (
-        <div role="alert" aria-live="assertive" className="mb-4 bg-red-50 text-red-700 p-3.5 rounded-2xl flex items-start gap-2.5 text-xs font-semibold border border-red-200/80 shadow-xs">
-          <AlertCircle size={18} className="shrink-0 text-red-600 mt-0.5" />
-          <span>{error}</span>
+      {/* Floating Status Toast */}
+      {(success || error) && (
+        <div className="fixed top-4 left-4 right-4 z-[60] flex justify-center pointer-events-none">
+          <div 
+            role={error ? "alert" : "status"} 
+            aria-live={error ? "assertive" : "polite"} 
+            className={`pointer-events-auto max-w-sm w-full p-4 rounded-2xl shadow-xl flex items-center gap-3 text-sm font-semibold border animate-in slide-in-from-top-4 fade-in duration-300 ${
+              error 
+                ? 'bg-red-50 text-red-800 border-red-200/80 shadow-red-500/10' 
+                : 'bg-emerald-50 text-emerald-800 border-emerald-200/80 shadow-emerald-500/10'
+            }`}
+          >
+            {error ? (
+              <AlertCircle size={20} className="shrink-0 text-red-600" />
+            ) : (
+              <CheckCircle2 size={20} className="shrink-0 text-emerald-600" />
+            )}
+            <span className="flex-1 leading-snug">{error || successMessage}</span>
+            <button 
+              type="button"
+              onClick={() => {
+                if (error) setError(null);
+                else setSuccess(false);
+              }}
+              className="p-1.5 -m-1.5 rounded-full hover:bg-black/5 active:scale-95 transition-all cursor-pointer flex-shrink-0"
+              aria-label="Dismiss message"
+            >
+              <X size={16} className={error ? 'text-red-700/70' : 'text-emerald-700/70'} />
+            </button>
+          </div>
         </div>
       )}
 
