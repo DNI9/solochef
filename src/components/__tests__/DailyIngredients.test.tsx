@@ -224,5 +224,32 @@ describe('DailyIngredients', () => {
     toggleBtn = screen.getByLabelText(/toggle today's ingredients, 1\/4 ready/i);
     expect(toggleBtn).toBeTruthy();
   });
+
+  it('maintains accessible list structure and animation attributes during filter changes', () => {
+    render(
+      <DailyIngredients
+        dayName="Monday"
+        meals={mockMeals}
+        checkedItems={{}}
+        onToggleItem={() => {}}
+      />
+    );
+
+    // Expand card
+    fireEvent.click(screen.getByRole('button', { name: /today's ingredients/i }));
+
+    // Verify accessible list container
+    const list = screen.getByRole('list');
+    expect(list.getAttribute('id')).toBe('daily-ingredients-list');
+    expect(list.getAttribute('aria-label')).toBe('Filtered ingredients');
+    expect(list.getAttribute('aria-live')).toBe('polite');
+
+    // Verify filter buttons controls
+    const allBtn = screen.getByRole('button', { name: /^all/i });
+    expect(allBtn.getAttribute('aria-controls')).toBe('daily-ingredients-list');
+
+    const breakfastBtn = screen.getByRole('button', { name: /^breakfast/i });
+    expect(breakfastBtn.getAttribute('aria-controls')).toBe('daily-ingredients-list');
+  });
 });
 

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { ChevronDown, Check } from 'lucide-react';
 import { MealData } from '@/data/meals';
 import { aggregateDayIngredients, filterIngredientsByMeal } from '@/utils/ingredients';
@@ -22,6 +22,7 @@ export default function DailyIngredients({
   // Hidden / collapsed by default
   const [isOpen, setIsOpen] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState('All');
+  const shouldReduceMotion = useReducedMotion();
 
   const allIngredients = useMemo(() => {
     return aggregateDayIngredients(meals);
@@ -54,8 +55,8 @@ export default function DailyIngredients({
 
   return (
     <motion.div 
-      layout
-      transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
+      layout="position"
+      transition={shouldReduceMotion ? { duration: 0 } : { type: "spring", bounce: 0, duration: 0.3 }}
       className="relative w-full rounded-[1.5rem] overflow-hidden border-2 bg-amber-50/80 border-amber-200/90 shadow-xs mb-4"
     >
       {/* Top Header matching MealCard layout */}
@@ -121,11 +122,12 @@ export default function DailyIngredients({
                         key={meal}
                         type="button"
                         aria-pressed={isActive}
+                        aria-controls="daily-ingredients-list"
                         onClick={(e) => {
                           e.stopPropagation();
                           setSelectedFilter(meal);
                         }}
-                        className={`min-h-[44px] px-3.5 py-2 rounded-xl text-xs font-semibold shrink-0 transition-all cursor-pointer select-none focus-visible:outline-2 focus-visible:outline-orange-500 ${
+                        className={`min-h-[44px] px-3.5 py-2 rounded-xl text-xs font-semibold shrink-0 transition cursor-pointer select-none focus-visible:outline-2 focus-visible:outline-orange-500 ${
                           isActive
                             ? 'bg-zinc-900 text-white shadow-xs'
                             : 'bg-white/80 text-zinc-700 hover:bg-white'
@@ -140,52 +142,66 @@ export default function DailyIngredients({
 
               {/* Checklist Box */}
               <div className="bg-white/90 backdrop-blur-xs rounded-xl p-2.5 border border-white/90 shadow-2xs">
-                <ul className="space-y-1 select-text">
+                <motion.ul 
+                  id="daily-ingredients-list"
+                  aria-label="Filtered ingredients"
+                  aria-live="polite"
+                  className="space-y-1 select-text"
+                >
                   {filteredIngredients.map((item) => {
                     const fullKey = `${dayName}-${item.id}`;
                     const isChecked = Boolean(checkedItems[fullKey]);
 
                     return (
-                      <li key={item.id}>
-                        <button
-                          type="button"
-                          role="checkbox"
-                          aria-checked={isChecked}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onToggleItem(fullKey);
-                          }}
-                          className="min-h-[44px] w-full flex items-center justify-between text-left p-2 rounded-xl transition-all hover:bg-white active:scale-[0.99] cursor-pointer select-none group focus-visible:outline-2 focus-visible:outline-orange-500"
-                        >
-                          <div className="flex items-center gap-3 min-w-0 pr-2">
-                            <div
-                              className={`w-5 h-5 rounded-md flex items-center justify-center border-2 shrink-0 transition-colors ${
-                                isChecked
-                                  ? 'bg-orange-600 border-orange-600 text-white'
-                                  : 'border-zinc-300 bg-white group-hover:border-zinc-400'
-                              }`}
-                            >
-                              {isChecked && <Check size={14} strokeWidth={3} />}
+                      <motion.li 
+                        key={item.id}
+                        layout={!shouldReduceMotion ? "position" : false}
+                        initial={shouldReduceMotion ? false : { opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ 
+                          opacity: { duration: 0.15 },
+                          layout: { duration: 0.2, ease: "easeOut" }
+                        }}
+                      >
+                          <button
+                            type="button"
+                            role="checkbox"
+                            aria-checked={isChecked}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onToggleItem(fullKey);
+                            }}
+                            className="min-h-[44px] w-full flex items-center justify-between text-left p-2 rounded-xl transition hover:bg-white active:scale-[0.99] cursor-pointer select-none group focus-visible:outline-2 focus-visible:outline-orange-500"
+                          >
+                            <div className="flex items-center gap-3 min-w-0 pr-2">
+                              <div
+                                className={`w-5 h-5 rounded-md flex items-center justify-center border-2 shrink-0 transition-colors ${
+                                  isChecked
+                                    ? 'bg-orange-600 border-orange-600 text-white'
+                                    : 'border-zinc-300 bg-white group-hover:border-zinc-400'
+                                }`}
+                              >
+                                {isChecked && <Check size={14} strokeWidth={3} />}
+                              </div>
+                              <span
+                                className={`text-xs font-medium truncate transition-opacity ${
+                                  isChecked
+                                    ? 'line-through text-zinc-400 opacity-60'
+                                    : 'text-zinc-800'
+                                }`}
+                              >
+                                {item.text}
+                              </span>
                             </div>
-                            <span
-                              className={`text-xs font-medium truncate transition-opacity ${
-                                isChecked
-                                  ? 'line-through text-zinc-400 opacity-60'
-                                  : 'text-zinc-800'
-                              }`}
-                            >
-                              {item.text}
-                            </span>
-                          </div>
 
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 bg-zinc-100 px-2 py-0.5 rounded-md shrink-0">
-                            {item.mealName}
-                          </span>
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 bg-zinc-100 px-2 py-0.5 rounded-md shrink-0">
+                              {item.mealName}
+                            </span>
+                          </button>
+                        </motion.li>
+                      );
+                    })}
+                </motion.ul>
               </div>
             </div>
           </motion.div>
